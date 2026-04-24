@@ -1,0 +1,160 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Element Plus 样式覆盖 */
+.el-tag {
+  border-radius: 4px;
+}
+
+.el-card {
+  border-radius: 8px;
+}
+
+/* 状态颜色 */
+.status-success {
+  color: #67c23a;
+}
+
+.status-danger {
+  color: #f56c6c;
+}
+
+.status-warning {
+  color: #e6a23c;
+}
+
+/* 页面标题 */
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #909399;
+}
+
+/* 表格相关 */
+.data-table .el-table .cell {
+  padding: 4px 8px;
+}
+
+.data-table .el-table th {
+  background-color: #f5f7fa;
+}
+
+/* 进度条 */
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #606266;
+  min-width: 60px;
+}
+
+/* 卡片网格 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #909399;
+}
+
+/* 树形表格 */
+.tree-card {
+  margin-bottom: 20px;
+}
+
+/* 数据录入表格 */
+.entry-table {
+  width: 100%;
+}
+
+.entry-table .station-cell {
+  font-weight: 600;
+  color: #409eff;
+}
+
+.entry-table .layer-cell {
+  color: #909399;
+}
+
+.entry-table .input-cell {
+  padding: 0 !important;
+}
+
+.entry-table .input-cell .el-input__inner {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.entry-table .input-cell .el-input {
+  --el-input-border-width: 0;
+}
+
+.entry-table .status-cell {
+  text-align: center;
+}
+
+/* 统计卡片 */
+.stat-card {
+  text-align: center;
+  padding: 20px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.stat-card .stat-label {
+  font-size: 14px;
+  color: #909399;
+  margin-top: 8px;
+}
+
+/* 进度环 */
+.progress-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring .progress-text {
+  position: absolute;
+  font-size: 14px;
+  font-weight: 600;
+}
