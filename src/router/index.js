@@ -31,6 +31,12 @@ const routes = [
     name: 'TaskEdit',
     component: () => import('../views/TaskEdit.vue'),
     meta: { title: '编辑任务' }
+  },
+  {
+    path: '/tasks/:taskId/data-entry',
+    name: 'DataEntry',
+    component: () => import('../views/DataEntry.vue'),
+    meta: { title: '数据录入' }
   }
 ]
 

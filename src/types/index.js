@@ -178,6 +178,51 @@ export const StatusFlow = {
 }
 
 /**
+ * 监测层次
+ */
+export const LayerType = {
+  SURFACE: 'surface',           // 表层
+  BOTTOM: 'bottom',             // 底层
+  HALF_METER: '0.5m',          // 0.5米
+  ONE_METER: '1m',              // 1米
+  ONE_HALF_METER: '1.5m'        // 1.5米
+}
+
+/**
+ * 监测层次名称
+ */
+export const LayerTypeName = {
+  [LayerType.SURFACE]: '表层',
+  [LayerType.BOTTOM]: '底层',
+  [LayerType.HALF_METER]: '0.5m',
+  [LayerType.ONE_METER]: '1m',
+  [LayerType.ONE_HALF_METER]: '1.5m'
+}
+
+/**
+ * 数据记录状态
+ */
+export const RecordStatus = {
+  FILLED: 'filled',    // 已填写
+  MISSING: 'missing'   // 缺失
+}
+
+/**
+ * 数据录入记录 (DataRecord)
+ * @typedef {Object} DataRecord
+ * @property {string} id
+ * @property {string} taskId 关联任务ID
+ * @property {string} stationCode 站位编号
+ * @property {string} stationName 站位名称
+ * @property {LayerType|string} layer 层次
+ * @property {string} indicatorId 指标ID
+ * @property {string} indicatorName 指标名称
+ * @property {string} indicatorUnit 指标单位
+ * @property {string} value 填写的值
+ * @property {RecordStatus} status 状态
+ */
+
+/**
  * 可用的指标列表 (用于选择)
  */
 export const AvailableIndicators = [
@@ -223,5 +268,8 @@ export default {
   DepthType,
   DepthTypeName,
   StatusFlow,
+  LayerType,
+  LayerTypeName,
+  RecordStatus,
   AvailableIndicators
 }

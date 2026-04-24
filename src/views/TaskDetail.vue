@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
-import { TaskStatus, TaskStatusName, TaskStatusColor, FrequencyName, DepthTypeName, FlowActionName } from '../types'
+import { TaskStatusName, TaskStatusColor, FrequencyName, DepthTypeName, FlowActionName, TaskStatus } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -11,6 +11,12 @@ const taskStore = useTaskStore()
 const taskId = computed(() => route.params.id)
 const task = computed(() => taskStore.getTaskById(taskId.value))
 const flows = computed(() => taskStore.getFlowsByTaskId(taskId.value))
+
+// 数据统计
+const dataStats = computed(() => {
+  if (!task.value) return null
+  return taskStore.getDataStatistics(taskId.value)
+})
 
 // 获取状态标签类型
 function getStatusTagType(status) {
@@ -36,6 +42,11 @@ function goBack() {
 function editTask() {
   router.push(`/tasks/${taskId.value}/edit`)
 }
+
+// 跳转到数据录入
+function goToDataEntry() {
+  router.push(`/tasks/${taskId.value}/data-entry`)
+}
 </script>
 
 <template>
@@ -45,10 +56,12 @@ function editTask() {
       <template #header>
         <div class="card-header">
           <span>任务信息</span>
-          <el-button type="primary" size="small" @click="editTask" v-if="task.status === 'draft' || task.status === 'rejected'">
-            <el-icon><Edit /></el-icon>
-            编辑
-          </el-button>
+          <div class="header-actions">
+            <el-button type="primary" size="small" @click="editTask" v-if="task.status === 'draft' || task.status === 'rejected'">
+              <el-icon><Edit /></el-icon>
+              编辑
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -83,6 +96,69 @@ function editTask() {
           <el-alert type="warning" :title="task.rejectReason" :closable="false" show-icon />
         </el-descriptions-item>
       </el-descriptions>
+    </el-card>
+
+    <!-- 数据录入卡片 -->
+    <el-card class="data-entry-card">
+      <template #header>
+        <div class="card-header">
+          <span>数据录入</span>
+          <el-button type="primary" size="small" @click="goToDataEntry">
+            <el-icon><Edit /></el-icon>
+            进入数据录入
+          </el-button>
+        </div>
+      </template>
+
+      <div class="data-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ dataStats?.total || 0 }}</div>
+          <div class="stat-label">应录入总数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value success">{{ dataStats?.filled || 0 }}</div>
+          <div class="stat-label">已录入</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value danger">{{ dataStats?.missing || 0 }}</div>
+          <div class="stat-label">缺失</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-progress">
+            <el-progress
+              type="circle"
+              :percentage="dataStats?.completionRate || 0"
+              :status="dataStats?.completionRate >= 100 ? 'success' : dataStats?.completionRate >= 50 ? 'warning' : 'exception'"
+              :stroke-width="10"
+              :width="80"
+            />
+          </div>
+          <div class="stat-label">完成率</div>
+        </div>
+      </div>
+
+      <!-- 缺失项提示 -->
+      <div class="missing-warning" v-if="dataStats?.missing > 0">
+        <el-alert
+          :title="`还有 ${dataStats.missing} 项数据未录入`"
+          type="warning"
+          show-icon
+          :closable="false"
+        />
+        <el-button type="warning" size="small" plain @click="goToDataEntry" style="margin-top: 10px">
+          前往录入
+        </el-button>
+      </div>
+
+      <!-- 全部完成提示 -->
+      <div class="complete-tip" v-else-if="dataStats?.total > 0">
+        <el-alert
+          title="所有数据已录入完成"
+          type="success"
+          show-icon
+          :closable="false"
+        />
+      </div>
     </el-card>
 
     <!-- 监测配置卡片 -->
@@ -190,6 +266,7 @@ function editTask() {
 }
 
 .info-card,
+.data-entry-card,
 .config-card,
 .flow-card {
   margin-bottom: 20px;
@@ -199,6 +276,11 @@ function editTask() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .config-section {
@@ -246,5 +328,47 @@ function editTask() {
   display: flex;
   justify-content: flex-start;
   margin-top: 20px;
+}
+
+/* 数据统计样式 */
+.data-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.stat-value.success {
+  color: #67c23a;
+}
+
+.stat-value.danger {
+  color: #f56c6c;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #909399;
+  margin-top: 5px;
+}
+
+.stat-progress {
+  display: flex;
+  justify-content: center;
+}
+
+.missing-warning,
+.complete-tip {
+  padding: 10px 0;
 }
 </style>

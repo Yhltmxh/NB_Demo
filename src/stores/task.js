@@ -1,6 +1,6 @@
 /**
  * 任务管理 Store
- * 包含任务 CRUD 和审批流转逻辑
+ * 包含任务 CRUD、审批流转和数据录入逻辑
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
@@ -8,11 +8,15 @@ import storage from '../utils/storage'
 import {
   TaskStatus,
   FlowAction,
-  StatusFlow
+  StatusFlow,
+  RecordStatus,
+  LayerType,
+  DepthType
 } from '../types'
 
 const STORAGE_KEY = 'task_data'
 const TASK_FLOW_KEY = 'task_flow'
+const DATA_RECORDS_KEY = 'data_records'
 
 // 生成ID
 const generateId = () => Math.random().toString(36).substring(2, 15)
@@ -24,6 +28,7 @@ export const useTaskStore = defineStore('task', () => {
   // 状态
   const tasks = ref([])
   const taskFlows = ref({}) // { taskId: TaskFlow[] }
+  const dataRecords = ref({}) // { taskId: DataRecord[] }
 
   // 是否已初始化
   const isInitialized = ref(false)
@@ -45,6 +50,7 @@ export const useTaskStore = defineStore('task', () => {
   function initialize() {
     const savedTasks = storage.get(STORAGE_KEY)
     const savedFlows = storage.get(TASK_FLOW_KEY)
+    const savedRecords = storage.get(DATA_RECORDS_KEY)
 
     if (savedTasks && savedTasks.length > 0) {
       tasks.value = savedTasks
@@ -57,7 +63,54 @@ export const useTaskStore = defineStore('task', () => {
       taskFlows.value = savedFlows
     }
 
+    if (savedRecords) {
+      dataRecords.value = savedRecords
+    }
+
     isInitialized.value = true
+  }
+
+  // 根据监测配置生成数据录入矩阵
+  function generateDataEntryMatrix(task) {
+    const records = []
+    const { stations, indicators, depths } = task.monitoringConfig
+
+    // 获取需要的层次
+    let layers = []
+    if (depths.type === DepthType.SURFACE) {
+      layers = [LayerType.SURFACE]
+    } else if (depths.type === DepthType.SURFACE_BOTTOM) {
+      layers = [LayerType.SURFACE, LayerType.BOTTOM]
+    } else if (depths.type === DepthType.CUSTOM) {
+      layers = depths.customDepths || []
+    }
+
+    // 生成每个站位 x 层次 x 指标 的组合
+    stations.forEach(station => {
+      // 如果是表底层配置且水深<=10m，只用表层
+      const effectiveLayers = (depths.type === DepthType.SURFACE_BOTTOM && station.depth <= 10)
+        ? [LayerType.SURFACE]
+        : layers
+
+      effectiveLayers.forEach(layer => {
+        indicators.forEach(indicator => {
+          records.push({
+            id: generateId(),
+            taskId: task.id,
+            stationCode: station.code,
+            stationName: station.name,
+            layer: layer,
+            indicatorId: indicator.id,
+            indicatorName: indicator.name,
+            indicatorUnit: indicator.unit || '',
+            value: '',
+            status: RecordStatus.MISSING
+          })
+        })
+      })
+    })
+
+    return records
   }
 
   // 加载 Mock 数据
@@ -171,21 +224,47 @@ export const useTaskStore = defineStore('task', () => {
     }
 
     taskFlows.value = mockFlows
+
+    // 初始化数据记录 - 为task_001生成一些假数据
+    const mockRecords = {
+      'task_001': generateMockDataRecords('task_001')
+    }
+    dataRecords.value = mockRecords
+
     saveData()
+  }
+
+  // 生成带假数据的数据记录（用于演示）
+  function generateMockDataRecords(taskId) {
+    const task = tasks.value.find(t => t.id === taskId)
+    if (!task) return []
+
+    const records = generateDataEntryMatrix(task)
+    // 随机填充一些数据
+    records.forEach((record, index) => {
+      if (Math.random() > 0.3) {
+        record.value = (Math.random() * 100).toFixed(2)
+        record.status = RecordStatus.FILLED
+      }
+    })
+    return records
   }
 
   // 保存数据到 localStorage
   function saveData() {
     storage.set(STORAGE_KEY, tasks.value)
     storage.set(TASK_FLOW_KEY, taskFlows.value)
+    storage.set(DATA_RECORDS_KEY, dataRecords.value)
   }
 
   // 重置数据
   function resetData() {
     storage.remove(STORAGE_KEY)
     storage.remove(TASK_FLOW_KEY)
+    storage.remove(DATA_RECORDS_KEY)
     tasks.value = []
     taskFlows.value = {}
+    dataRecords.value = {}
     loadMockData()
   }
 
@@ -212,6 +291,9 @@ export const useTaskStore = defineStore('task', () => {
 
     tasks.value.push(newTask)
 
+    // 为新任务生成数据录入矩阵
+    dataRecords.value[newTask.id] = generateDataEntryMatrix(newTask)
+
     // 记录流转
     addFlow(newTask.id, FlowAction.CREATE, newTask.creator, '创建任务')
 
@@ -234,6 +316,10 @@ export const useTaskStore = defineStore('task', () => {
         ...taskData,
         id: taskId // 保持ID不变
       }
+
+      // 重新生成数据录入矩阵（如果监测配置变了）
+      dataRecords.value[taskId] = generateDataEntryMatrix(tasks.value[index])
+
       saveData()
       return { success: true, message: '更新成功' }
     }
@@ -384,17 +470,115 @@ export const useTaskStore = defineStore('task', () => {
     const index = tasks.value.findIndex(t => t.id === taskId)
     tasks.value.splice(index, 1)
 
-    // 删除关联的流转记录
+    // 删除关联的流转记录和数据记录
     delete taskFlows.value[taskId]
+    delete dataRecords.value[taskId]
 
     saveData()
     return { success: true, message: '删除成功' }
+  }
+
+  // ========== 数据录入相关 ==========
+
+  // 获取任务的数据记录
+  function getDataRecordsByTaskId(taskId) {
+    if (!dataRecords.value[taskId]) {
+      // 如果没有，则生成
+      const task = getTaskById(taskId)
+      if (task) {
+        dataRecords.value[taskId] = generateDataEntryMatrix(task)
+        saveData()
+      }
+    }
+    return dataRecords.value[taskId] || []
+  }
+
+  // 更新单条数据记录
+  function updateDataRecord(taskId, recordId, value) {
+    const records = dataRecords.value[taskId]
+    if (!records) return
+
+    const record = records.find(r => r.id === recordId)
+    if (record) {
+      record.value = value
+      record.status = value !== '' ? RecordStatus.FILLED : RecordStatus.MISSING
+      saveData()
+    }
+  }
+
+  // 批量更新数据记录
+  function batchUpdateDataRecords(taskId, updates) {
+    const records = dataRecords.value[taskId]
+    if (!records) return
+
+    updates.forEach(update => {
+      const record = records.find(r => r.id === update.id)
+      if (record) {
+        record.value = update.value
+        record.status = update.value !== '' ? RecordStatus.FILLED : RecordStatus.MISSING
+      }
+    })
+    saveData()
+  }
+
+  // 获取任务的数据完成率
+  function getDataCompletionRate(taskId) {
+    const records = getDataRecordsByTaskId(taskId)
+    if (records.length === 0) return 100
+
+    const filledCount = records.filter(r => r.status === RecordStatus.FILLED && r.value !== '').length
+    return Math.round((filledCount / records.length) * 100)
+  }
+
+  // 获取任务的数据统计
+  function getDataStatistics(taskId) {
+    const records = getDataRecordsByTaskId(taskId)
+    const total = records.length
+    const filled = records.filter(r => r.status === RecordStatus.FILLED && r.value !== '').length
+    const missing = total - filled
+
+    return {
+      total,
+      filled,
+      missing,
+      completionRate: total > 0 ? Math.round((filled / total) * 100) : 100
+    }
+  }
+
+  // 获取缺失项列表
+  function getMissingItems(taskId) {
+    const records = getDataRecordsByTaskId(taskId)
+    return records.filter(r => r.status === RecordStatus.MISSING || r.value === '')
+  }
+
+  // 按站位统计缺失项
+  function getMissingByStation(taskId) {
+    const missingRecords = getMissingItems(taskId)
+    const byStation = {}
+
+    missingRecords.forEach(record => {
+      const key = `${record.stationCode}-${record.layer}`
+      if (!byStation[key]) {
+        byStation[key] = {
+          stationCode: record.stationCode,
+          layer: record.layer,
+          indicators: []
+        }
+      }
+      byStation[key].indicators.push({
+        name: record.indicatorName,
+        unit: record.indicatorUnit
+      })
+    })
+
+    return Object.values(byStation)
   }
 
   return {
     // 状态
     tasks,
     taskFlows,
+    dataRecords,
     isInitialized,
 
     // 计算属性
@@ -402,7 +586,7 @@ export const useTaskStore = defineStore('task', () => {
     getTasksByStatus,
     getFlowsByTaskId,
 
-    // 方法
+    // 任务管理方法
     initialize,
     loadMockData,
     saveData,
@@ -417,6 +601,15 @@ export const useTaskStore = defineStore('task', () => {
     getTaskById,
     getNextStatus,
     canExecuteAction,
-    deleteTask
+    deleteTask,
+
+    // 数据录入方法
+    getDataRecordsByTaskId,
+    updateDataRecord,
+    batchUpdateDataRecords,
+    getDataCompletionRate,
+    getDataStatistics,
+    getMissingItems,
+    getMissingByStation
   }
 })
