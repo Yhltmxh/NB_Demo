@@ -12,19 +12,25 @@ const routes = [
     path: '/tasks',
     name: 'TaskList',
     component: () => import('../views/TaskList.vue'),
-    meta: { title: '任务管理' }
+    meta: { title: '任务列表' }
   },
   {
-    path: '/data-entry/:subTaskId?',
-    name: 'DataEntry',
-    component: () => import('../views/DataEntry.vue'),
-    meta: { title: '数据录入' }
+    path: '/tasks/create',
+    name: 'TaskCreate',
+    component: () => import('../views/TaskCreate.vue'),
+    meta: { title: '创建任务' }
   },
   {
-    path: '/progress',
-    name: 'Progress',
-    component: () => import('../views/Progress.vue'),
-    meta: { title: '进度统计' }
+    path: '/tasks/:id',
+    name: 'TaskDetail',
+    component: () => import('../views/TaskDetail.vue'),
+    meta: { title: '任务详情' }
+  },
+  {
+    path: '/tasks/:id/edit',
+    name: 'TaskEdit',
+    component: () => import('../views/TaskEdit.vue'),
+    meta: { title: '编辑任务' }
   }
 ]
 

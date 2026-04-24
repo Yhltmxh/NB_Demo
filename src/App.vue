@@ -10,9 +10,7 @@ const taskStore = useTaskStore()
 const isCollapse = ref(false)
 
 const menuItems = [
-  { path: '/tasks', title: '任务管理', icon: 'Folder' },
-  { path: '/data-entry', title: '数据录入', icon: 'Edit' },
-  { path: '/progress', title: '进度统计', icon: 'DataAnalysis' }
+  { path: '/tasks', title: '任务管理', icon: 'Folder' }
 ]
 
 onMounted(() => {
@@ -30,7 +28,7 @@ function handleMenuSelect(index) {
     <el-aside width="220px" class="sidebar">
       <div class="logo">
         <el-icon size="24"><Water /></el-icon>
-        <span v-if="!isCollapse">海洋环境监测</span>
+        <span v-if="!isCollapse">环境监测系统</span>
       </div>
       <el-menu
         :default-active="route.path"
@@ -59,9 +57,7 @@ function handleMenuSelect(index) {
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-tag type="info" v-if="taskStore.task">
-            {{ taskStore.task.taskCode }}
-          </el-tag>
+          <el-tag type="info">环境监测任务管理与流转</el-tag>
         </div>
       </el-header>
 

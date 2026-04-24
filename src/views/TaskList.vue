@@ -1,196 +1,264 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
-import { SubTaskType, SubTaskTypeName } from '../types'
+import { TaskStatus, TaskStatusName, TaskStatusColor, FrequencyName, FlowAction } from '../types'
+import ApprovalDialog from '../components/ApprovalDialog.vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
 
+const statusFilter = ref('')
 const searchKeyword = ref('')
 
-const taskData = computed(() => {
-  if (!taskStore.task) return null
+// 过滤后的任务列表
+const filteredTasks = computed(() => {
+  let result = taskStore.taskList
 
-  const validation = taskStore.validateTaskById(taskStore.task.id)
-
-  return {
-    ...taskStore.task,
-    completionRate: validation.statistics.completionRate,
-    subTaskCount: taskStore.subTasks.filter(st => st.taskId === taskStore.task.id).length,
-    totalItems: validation.statistics.totalItems,
-    filledItems: validation.statistics.filledItems,
-    missingItems: validation.statistics.missingItems
+  // 状态筛选
+  if (statusFilter.value) {
+    result = result.filter(t => t.status === statusFilter.value)
   }
+
+  // 关键词搜索
+  if (searchKeyword.value) {
+    const kw = searchKeyword.value.toLowerCase()
+    result = result.filter(t =>
+      t.name.toLowerCase().includes(kw) ||
+      t.taskCode.toLowerCase().includes(kw)
+    )
+  }
+
+  return result
 })
 
-const subTaskStats = computed(() => {
-  if (!taskStore.task) return []
-  return taskStore.getSubTaskCompletionRates(taskStore.task.id)
-})
+// 状态选项
+const statusOptions = Object.entries(TaskStatusName).map(([value, label]) => ({
+  value,
+  label
+}))
 
-function goToDataEntry(subTaskId) {
-  router.push(`/data-entry/${subTaskId}`)
-}
+// 获取任务可用的动作
+function getAvailableActions(task) {
+  const actions = []
 
-function goToProgress() {
-  router.push('/progress')
-}
-
-function getStatusType(completionRate) {
-  if (completionRate >= 100) return 'success'
-  if (completionRate >= 50) return 'warning'
-  return 'danger'
-}
-
-function getSubTaskIcon(type) {
-  const icons = {
-    [SubTaskType.DREDGED_MUD]: 'Box',
-    [SubTaskType.WATER_QUALITY]: 'Water',
-    [SubTaskType.SEDIMENT]: 'Document',
-    [SubTaskType.BIOLOGY]: 'Operation',
-    [SubTaskType.FISHERY]: 'Grid',
-    [SubTaskType.ENVIRONMENT]: 'View'
+  if (task.status === TaskStatus.DRAFT || task.status === TaskStatus.REJECTED) {
+    actions.push({ key: 'edit', label: '编辑', icon: 'Edit' })
+    actions.push({ key: 'submit', label: '提交审核', icon: 'Upload' })
+    if (task.status === TaskStatus.DRAFT) {
+      actions.push({ key: 'delete', label: '删除', icon: 'Delete' })
+    }
   }
-  return icons[type] || 'Folder'
+
+  if (task.status === TaskStatus.PENDING) {
+    actions.push({ key: 'approve', label: '审核', icon: 'CircleCheck' })
+    actions.push({ key: 'reject', label: '驳回', icon: 'CircleClose' })
+  }
+
+  if (task.status === TaskStatus.APPROVED) {
+    actions.push({ key: 'start', label: '启动任务', icon: 'VideoPlay' })
+  }
+
+  if (task.status === TaskStatus.RUNNING) {
+    actions.push({ key: 'complete', label: '完成任务', icon: 'Finished' })
+  }
+
+  if (task.status === TaskStatus.COMPLETED) {
+    actions.push({ key: 'view', label: '查看', icon: 'View' })
+  }
+
+  return actions
 }
 
-function getStationCount(subTaskId) {
-  const stations = taskStore.getStationsBySubTaskId(subTaskId)
-  return stations.length
+// 执行动作
+async function handleAction(key, task) {
+  switch (key) {
+    case 'edit':
+      router.push(`/tasks/${task.id}/edit`)
+      break
+    case 'submit':
+      await taskStore.submitTask(task.id, '当前用户', '提交审核')
+      break
+    case 'approve':
+      approvalDialogRef.value?.open(task, 'approve')
+      break
+    case 'reject':
+      approvalDialogRef.value?.open(task, 'reject')
+      break
+    case 'start':
+      await taskStore.startTask(task.id, '管理员', '启动任务')
+      break
+    case 'complete':
+      await taskStore.completeTask(task.id, '管理员', '完成任务')
+      break
+    case 'delete':
+      await handleDelete(task)
+      break
+    case 'view':
+      router.push(`/tasks/${task.id}`)
+      break
+  }
 }
 
-function resetMockData() {
-  taskStore.resetData()
+// 删除任务
+async function handleDelete(task) {
+  const result = await taskStore.deleteTask(task.id)
+  if (!result.success) {
+    ElMessage.error(result.message)
+  }
+}
+
+// 审核对话框引用
+const approvalDialogRef = ref(null)
+
+// 审核结果处理
+function onApprovalResult(result) {
+  if (result.action === 'approve') {
+    taskStore.approveTask(result.taskId, '审核人', result.comment)
+  } else {
+    taskStore.rejectTask(result.taskId, '审核人', result.comment)
+  }
+}
+
+// 跳转到创建页面
+function goToCreate() {
+  router.push('/tasks/create')
+}
+
+// 跳转到详情
+function goToDetail(task) {
+  router.push(`/tasks/${task.id}`)
+}
+
+// 获取状态标签类型
+function getStatusTagType(status) {
+  return TaskStatusColor[status] || 'info'
 }
 </script>
 
 <template>
   <div class="task-list">
-    <!-- 任务概览 -->
-    <el-card class="task-overview" v-if="taskData">
-      <div class="task-header">
-        <div class="task-info">
-          <h2 class="task-name">{{ taskData.name }}</h2>
-          <div class="task-meta">
-            <el-tag size="small" type="info">{{ taskData.taskCode }}</el-tag>
-            <span class="task-time">
-              <el-icon><Calendar /></el-icon>
-              {{ taskData.startTime }} ~ {{ taskData.endTime }}
-            </span>
-          </div>
-        </div>
-        <div class="task-actions">
-          <el-button type="primary" @click="goToProgress">
-            <el-icon><DataAnalysis /></el-icon>
-            查看进度统计
-          </el-button>
-          <el-button @click="resetMockData">
-            <el-icon><Refresh /></el-icon>
-            重置数据
-          </el-button>
-        </div>
-      </div>
+    <!-- 工具栏 -->
+    <el-card class="toolbar-card">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索任务编号/名称"
+            style="width: 200px"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
 
-      <div class="task-stats">
-        <div class="stat-item">
-          <div class="stat-value">{{ taskData.completionRate }}%</div>
-          <div class="stat-label">总体完成率</div>
-          <el-progress
-            :percentage="taskData.completionRate"
-            :status="getStatusType(taskData.completionRate)"
-            :stroke-width="8"
-          />
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ taskData.filledItems }}</div>
-          <div class="stat-label">已录入</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value status-danger">{{ taskData.missingItems }}</div>
-          <div class="stat-label">缺失</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ taskData.totalItems }}</div>
-          <div class="stat-label">应录入总数</div>
-        </div>
-      </div>
-    </el-card>
-
-    <!-- 子任务列表 -->
-    <div class="subtask-section">
-      <h3 class="section-title">子任务列表</h3>
-      <div class="subtask-grid">
-        <el-card
-          v-for="stat in subTaskStats"
-          :key="stat.subTaskId"
-          class="subtask-card"
-          shadow="hover"
-        >
-          <div class="subtask-header">
-            <div class="subtask-icon">
-              <el-icon size="24"><component :is="getSubTaskIcon(stat.subTaskType)" /></el-icon>
-            </div>
-            <div class="subtask-info">
-              <div class="subtask-name">{{ taskStore.getSubTaskTypeName(stat.subTaskType) }}</div>
-              <div class="subtask-stations">{{ getStationCount(stat.subTaskId) }} 个站位</div>
-            </div>
-          </div>
-
-          <div class="subtask-progress">
-            <div class="progress-info">
-              <span>完成率</span>
-              <span class="progress-value">{{ stat.completionRate }}%</span>
-            </div>
-            <el-progress
-              :percentage="stat.completionRate"
-              :status="getStatusType(stat.completionRate)"
-              :stroke-width="6"
+          <el-select
+            v-model="statusFilter"
+            placeholder="状态筛选"
+            clearable
+            style="width: 150px; margin-left: 10px"
+          >
+            <el-option
+              v-for="option in statusOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
             />
-          </div>
-
-          <div class="subtask-stats-row">
-            <span class="stat">
-              <el-tag type="success" size="small">{{ stat.filledItems }} 已填</el-tag>
-            </span>
-            <span class="stat">
-              <el-tag type="danger" size="small">{{ stat.missingItems }} 缺失</el-tag>
-            </span>
-          </div>
-
-          <div class="subtask-actions">
-            <el-button type="primary" size="small" @click="goToDataEntry(stat.subTaskId)">
-              <el-icon><Edit /></el-icon>
-              数据录入
-            </el-button>
-          </div>
-        </el-card>
-      </div>
-    </div>
-
-    <!-- 任务树形结构 -->
-    <el-card class="tree-card">
-      <template #header>
-        <div class="card-header">
-          <span>任务结构</span>
+          </el-select>
         </div>
-      </template>
-      <el-tree
-        v-if="taskData"
-        :data="[taskStore.getTaskTree(taskData.id)]"
-        :props="{ children: 'children', label: 'label' }"
-        default-expand-all
-      >
-        <template #default="{ data }">
-          <span class="tree-node">
-            <el-icon v-if="data.type === 'task'"><FolderOpened /></el-icon>
-            <el-icon v-else-if="data.type === 'subTask'"><Collection /></el-icon>
-            <el-icon v-else><Location /></el-icon>
-            <span>{{ data.label }}</span>
-          </span>
-        </template>
-      </el-tree>
+
+        <div class="toolbar-right">
+          <el-button type="primary" @click="goToCreate">
+            <el-icon><Plus /></el-icon>
+            创建任务
+          </el-button>
+        </div>
+      </div>
     </el-card>
+
+    <!-- 任务表格 -->
+    <el-card class="table-card">
+      <el-table
+        :data="filteredTasks"
+        border
+        stripe
+        style="width: 100%"
+        :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600' }"
+      >
+        <el-table-column prop="taskCode" label="任务编号" width="150">
+          <template #default="{ row }">
+            <el-link type="primary" @click="goToDetail(row)">
+              {{ row.taskCode }}
+            </el-link>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="name" label="任务名称" min-width="200">
+          <template #default="{ row }">
+            <div class="task-name-cell">
+              <span>{{ row.name }}</span>
+              <el-tooltip v-if="row.description" :content="row.description" placement="top">
+                <el-icon class="desc-icon"><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="frequency" label="监测频次" width="100">
+          <template #default="{ row }">
+            {{ FrequencyName[row.frequency] || row.frequency }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="status" label="状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getStatusTagType(row.status)" size="small">
+              {{ TaskStatusName[row.status] }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="timeRange" label="时间范围" width="220">
+          <template #default="{ row }">
+            {{ row.startTime }} ~ {{ row.endTime }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="creator" label="创建人" width="100" />
+        <el-table-column prop="createTime" label="创建时间" width="160" />
+
+        <el-table-column label="操作" width="200" fixed="right">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <template v-for="action in getAvailableActions(row)" :key="action.key">
+                <el-button
+                  :type="action.key === 'delete' ? 'danger' : action.key === 'reject' ? 'warning' : 'primary'"
+                  size="small"
+                  text
+                  @click="handleAction(action.key, row)"
+                >
+                  <el-icon><component :is="action.icon" /></el-icon>
+                  {{ action.label }}
+                </el-button>
+              </template>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 空状态 -->
+      <el-empty
+        v-if="filteredTasks.length === 0"
+        description="暂无任务"
+        style="padding: 40px 0"
+      >
+        <el-button type="primary" @click="goToCreate">创建第一个任务</el-button>
+      </el-empty>
+    </el-card>
+
+    <!-- 审核对话框 -->
+    <ApprovalDialog ref="approvalDialogRef" @result="onApprovalResult" />
   </div>
 </template>
 
@@ -200,165 +268,40 @@ function resetMockData() {
   margin: 0 auto;
 }
 
-.task-overview {
+.toolbar-card {
   margin-bottom: 20px;
 }
 
-.task-header {
+.toolbar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.table-card {
   margin-bottom: 20px;
 }
 
-.task-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
-  margin: 0 0 10px 0;
-}
-
-.task-meta {
+.task-name-cell {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 8px;
 }
 
-.task-time {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #606266;
-  font-size: 14px;
-}
-
-.task-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.task-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #ebeef5;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.stat-label {
-  font-size: 14px;
+.desc-icon {
   color: #909399;
-  margin-top: 5px;
+  cursor: pointer;
 }
 
-.subtask-section {
-  margin-bottom: 20px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 15px;
-}
-
-.subtask-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.subtask-card {
-  transition: all 0.3s;
-}
-
-.subtask-card:hover {
-  transform: translateY(-2px);
-}
-
-.subtask-header {
+.action-buttons {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.subtask-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #409eff 0%, #337ecc 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.subtask-info {
-  flex: 1;
-}
-
-.subtask-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.subtask-stations {
-  font-size: 13px;
-  color: #909399;
-  margin-top: 4px;
-}
-
-.subtask-progress {
-  margin-bottom: 15px;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #606266;
-  margin-bottom: 8px;
-}
-
-.progress-value {
-  font-weight: 600;
-  color: #409eff;
-}
-
-.subtask-stats-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.subtask-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.tree-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
-  font-weight: 600;
-}
-
-.tree-node {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 </style>

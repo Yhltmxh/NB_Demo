@@ -1,40 +1,90 @@
 # 项目更新日志
 
-## 2026-04-24 - 初始版本
+## 2026-04-24 - 第二版更新（任务管理 + 审批流转 + 监测配置）
+
+### 重大重构说明
+
+根据新版需求文档，项目从"数据录入系统"重构为"任务管理与审批流转系统"。
 
 ### 新增功能
 
-- **任务管理页面** (`/tasks`)
-  - 任务概览卡片，显示任务名称、编号、时间范围
-  - 总体完成率进度条和统计数据
-  - 子任务列表卡片，支持跳转数据录入
-  - 任务树形结构展示
+#### 1. 任务管理
+- 任务列表页，支持状态筛选和关键词搜索
+- 任务创建页，包含完整的监测配置表单
+- 任务详情页，展示任务信息和流转记录时间线
+- 任务编辑页，支持修改草稿/驳回状态的任务
 
-- **数据录入页面** (`/data-entry`)
-  - 子任务类型选择（疏浚泥监测、水质监测、沉积物监测等）
-  - Excel风格数据表格
-  - 支持按站位、层次、指标筛选
-  - 实时保存数据到 localStorage
-  - 显示完成率和缺失数量
+#### 2. 审批流转
+实现了完整的状态流转逻辑：
 
-- **进度统计页面** (`/progress`)
-  - 圆形完成率展示
-  - 各子任务进度列表
-  - 缺失项按站位统计表格
-  - 缺失项按指标统计表格
+状态流：
+```
+draft(草稿) → pending(待审核) → approved(已通过) → running(进行中) → completed(已完成)
+                    ↘
+                  rejected(驳回) → draft(草稿)
+```
+
+流转动作：
+- `createTask` - 创建任务
+- `submitTask` - 提交审核
+- `approveTask` - 审核通过
+- `rejectTask` - 驳回任务（需填写意见）
+- `startTask` - 启动任务
+- `completeTask` - 完成任务
+
+#### 3. 监测配置（结构化数据）
+
+**monitoringConfig 结构：**
+```javascript
+{
+  stations: [     // 站位数组
+    { code, name, longitude, latitude, depth }
+  ],
+  indicators: [    // 指标数组
+    { id, name, category, unit }
+  ],
+  depths: {        // 深度配置
+    type: 'surface' | 'surface_bottom' | 'custom',
+    customDepths: ['0.5m', '1m', '1.5m']
+  }
+}
+```
+
+#### 4. 审核对话框
+- 查看任务完整信息
+- 通过/驳回操作
+- 驳回时必须填写意见
 
 ### 数据模型
 
-- Task（任务）：id, taskCode, name, startTime, endTime
-- SubTask（子任务）：id, taskId, type, frequency
-- Station（站位）：id, subTaskId, stationCode, hasLayers, layers, monitoringElements, depth
-- Indicator（指标）：id, name, category, unit
-- DataRecord（数据录入）：id, taskId, subTaskId, stationId, layer, indicatorId, value, status
+#### Task（任务）
+- id, taskCode, name, startTime, endTime, frequency
+- status: draft | pending | approved | rejected | running | completed
+- monitoringConfig: { stations, indicators, depths }
+- creator, createTime, rejectReason
 
-### 业务规则
+#### TaskFlow（流转记录）
+- taskId, action, operator, comment, time
 
-- **疏浚泥监测**：柱状样站位（HD1、HD8、HD14）需要采集4层（表层、0.5m、1m、1.5m），其他站位仅表层
-- **水质监测**：水深≤10m只采表层，>10m需采表层和底层
+### 页面路由
+
+| 路径 | 页面 | 说明 |
+|------|------|------|
+| /tasks | TaskList | 任务列表 |
+| /tasks/create | TaskCreate | 创建任务 |
+| /tasks/:id | TaskDetail | 任务详情+时间线 |
+| /tasks/:id/edit | TaskEdit | 编辑任务 |
+
+### 状态颜色
+
+| 状态 | 颜色 |
+|------|------|
+| draft | info (灰) |
+| pending | warning (橙) |
+| approved | primary (蓝) |
+| rejected | danger (红) |
+| running | success (绿) |
+| completed | success (绿) |
 
 ### 技术栈
 
@@ -52,19 +102,34 @@ src/
 ├── App.vue              # 主布局组件
 ├── style.css           # 全局样式
 ├── router/index.js     # 路由配置
-├── stores/task.js      # Pinia Store
+├── stores/task.js      # Pinia Store (含流转逻辑)
 ├── types/index.js      # 类型定义
-├── utils/
-│   ├── storage.js      # localStorage封装
-│   ├── mockData.js     # Mock数据
-│   └── validation.js   # 校验逻辑
+├── utils/storage.js    # localStorage封装
+├── components/
+│   └── ApprovalDialog.vue  # 审核对话框
 └── views/
-    ├── TaskList.vue    # 任务管理
-    ├── DataEntry.vue   # 数据录入
-    └── Progress.vue    # 进度统计
+    ├── TaskList.vue    # 任务列表
+    ├── TaskCreate.vue  # 创建任务
+    ├── TaskDetail.vue  # 任务详情
+    └── TaskEdit.vue    # 编辑任务
 ```
 
 ### 待后端对接
 
-- `src/stores/task.js` 的 `initialize()` 和 `saveData()` 方法
-- `src/utils/storage.js` 可替换为 API 调用
+- `src/stores/task.js` 的所有方法可改为 API 调用
+- `src/utils/storage.js` 可替换为 API 持久化
+
+---
+
+## 2026-04-24 - 初始版本（数据录入系统）
+
+（已废弃，被第二版替代）
+
+### 功能
+- 任务概览和子任务管理
+- Excel风格数据录入表格
+- 进度统计和缺失项分析
+- 数据完整性校验逻辑
+
+### 说明
+第一版侧重于"数据录入"，已不再维护。
