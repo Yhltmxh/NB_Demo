@@ -1,188 +1,207 @@
-你是一个资深前端工程师，请基于 Vue3 + Vite 实现一个“环境监测任务管理与流转系统”。
+请在现有“任务管理 + 审批流转系统”的基础上进行增强开发（不要推翻重写），新增“子任务拆解 + 进度管理”能力。
 
-⚠️ 当前重点：
-任务管理 + 审批流转 + 监测配置（不是数据录入）
-
----
-
-# 🎯 一、任务必须包含以下信息（重点）
-
-任务创建时必须填写：
-
-1. 基础信息：
-- 任务编号（taskCode）
-- 任务名称（name）
-- 时间范围（startTime, endTime）
-- 监测频次（frequency）
-
-2. 监测配置（核心）：
-
-- 站位（stations）👉 多选 / 可动态添加
-- 指标（indicators）👉 多选
-- 深度（depth）👉 支持：
-  - 表层
-  - 表底层
-  - 自定义（如 0.5m / 1m）
-
-⚠️ 注意：这些必须是结构化数据，而不是字符串
+⚠️ 当前目标：
+在原有 Task + Flow 结构上，引入 SubTask（子任务）体系，并实现进度统计。
 
 ---
 
-# 🧩 二、数据模型设计（必须这样拆）
+# 🧩 一、在现有结构上新增数据模型（重点）
 
-## Task
+## 1. SubTask（子任务）
+
+子任务按“监测要素类型”划分：
+
+类型固定为：
+- 水质（water）
+- 沉积物（sediment）
+- 生物（biology）
+- 渔业资源（fishery）
+
+字段：
 
 - id
-- taskCode
-- name
-- startTime
-- endTime
-- frequency
-
-- monitoringConfig:
-    - stations: string[]
-    - indicators: string[]
-    - depths: string[]
-
-- status：
-  draft / pending / approved / rejected / running / completed
-
----
-
-## TaskFlow（流转记录）
-
 - taskId
-- action（submit / approve / reject）
-- operator
-- comment
-- time
+- type（子任务类型）
+- indicators（该子任务的指标列表）
+- status（pending / running / completed）
 
 ---
 
-# 🔁 三、任务流转逻辑（必须实现）
+## 2. SubTaskExecution（子任务执行）
 
-状态流：
+用于表示“某子任务在某站位的执行情况”
 
-draft → pending → approved → running → completed  
-          ↘ rejected → draft
+字段：
 
-必须实现：
-
-- createTask
-- submitTask
-- approveTask
-- rejectTask
-- startTask
+- id
+- taskId
+- subTaskId
+- stationCode
+- progress（0-100）
+- status（未开始 / 进行中 / 已完成）
 
 ---
 
-# 🧱 四、页面设计
-
-## 1. 任务列表页（核心）
-
-展示：
-
-- 任务编号
-- 名称
-- 频次
-- 状态
-- 时间
-
-支持：
-
-- 状态筛选
-- 操作按钮：
-  - 编辑
-  - 提交审核
-  - 审核
-  - 启动任务
+⚠️ 注意：
+- 子任务 ≠ 站位
+- 子任务是“任务拆解”
+- 执行才和站位关联
 
 ---
 
-## 2. 任务创建页（重点优化）
+# 🧱 二、任务创建页增强（核心改动）
+
+在原有“任务基础信息 + monitoringConfig”基础上：
+
+## 新增：子任务配置
 
 必须支持：
 
-### 基础信息表单
-- 输入：编号 / 名称 / 时间 / 频次
+👉 勾选要创建哪些子任务：
+
+- ☑ 水质
+- ☑ 沉积物
+- ☑ 生物
+- ☑ 渔业资源
 
 ---
 
-### 监测配置（重点）
+## 子任务指标自动生成（关键）
 
-#### 站位配置
-- 支持添加多个站位（如：S1、S2）
-- 可动态增删
+根据任务书预置规则：
 
-#### 指标配置
-- 多选（如：pH、DO、COD）
+例如：
 
-#### 深度配置
-- 下拉选择：
-  - 表层
-  - 表底层
-  - 自定义输入
+### 水质：
+- pH、DO、COD、氨氮等
 
-👉 最终保存为数组
+### 沉积物：
+- 有机碳、硫化物、重金属等
 
----
+### 生物：
+- 叶绿素a、浮游生物等
 
-## 3. 审核弹窗
-
-- 查看任务信息（包含监测配置）
-- 审核：
-  - 通过
-  - 驳回（必须填写意见）
+👉 在代码中用 mock 配置定义（不要写死在组件）
 
 ---
 
-## 4. 任务详情页
+# 🔁 三、任务审批通过后（重要逻辑）
+
+在 approveTask 时：
+
+自动执行：
+
+1. 创建 SubTask 列表
+2. 根据 stations 自动生成 SubTaskExecution：
+
+例如：
+
+任务有：
+- 10个站位
+- 2个子任务（水质、生物）
+
+👉 自动生成：
+20条 execution 记录
+
+---
+
+# 📊 四、进度计算（核心功能）
+
+## 1. 子任务进度
+
+每个 SubTask：
+
+progress = 已完成站位数 / 总站位数
+
+---
+
+## 2. 总任务进度
+
+taskProgress = 所有子任务平均进度
+
+或：
+
+= 所有 execution 完成比例
+
+---
+
+必须实现函数：
+
+- getSubTaskProgress(subTaskId)
+- getTaskProgress(taskId)
+
+---
+
+# 🧱 五、任务详情页增强（重点页面）
+
+在现有详情页基础上新增：
+
+---
+
+## 1. 子任务列表
 
 展示：
 
-- 基础信息
-- 监测配置（结构化展示）
-- 流转记录（timeline）
+- 子任务类型（水质等）
+- 进度条
+- 状态
 
 ---
 
-# 💾 五、数据管理
+## 2. 子任务展开（关键）
 
-- 使用 Pinia
-- 使用 localStorage 持久化
-- 封装 storage
+点击子任务可展开：
 
----
+显示：
 
-# 🎨 六、UI要求
-
-- Element Plus
-- 表单 + 表格 + 标签
-- 状态颜色：
-
-  - draft：灰
-  - pending：橙
-  - approved：蓝
-  - running：绿
-  - rejected：红
+| 站位 | 状态 | 进度 |
+|------|------|------|
 
 ---
 
-# 📦 七、输出要求
+## 3. 总进度展示
 
-请输出：
-
-1. 完整 Vue 项目代码
-2. 数据结构说明（为什么这样设计 monitoringConfig）
-3. 状态流转实现
-4. mock 数据
-5. 如何扩展到“自动生成数据录入表”的说明
+- 顶部显示任务总进度（进度条）
 
 ---
 
-# 🚀 八、代码质量要求
+# 🧪 六、数据录入（只做轻量模拟）
 
-- 不允许把监测配置写死
-- monitoringConfig 必须可扩展
-- 状态流转必须集中管理（store）
-- 组件职责清晰
+不需要完整实现复杂录入，只需：
+
+- 在 SubTaskExecution 中提供“标记完成”按钮
+- 点击后：
+  - progress = 100
+  - status = 已完成
+
+👉 用于驱动进度变化
+
+---
+
+# 💾 七、数据管理要求
+
+- 所有 SubTask / Execution 数据存入 Pinia
+- localStorage 持久化
+- 逻辑必须在 store 中（不能写在组件）
+
+---
+
+# 🎯 八、输出要求
+
+请在现有代码基础上：
+
+1. 增量输出新增的：
+   - SubTask 相关代码
+   - Execution 逻辑
+2. 修改哪些文件（说明清楚）
+3. 进度计算逻辑说明
+4. mock 指标配置
+
+---
+
+# 🚀 九、代码质量要求
+
+- 不允许破坏原有 Task + Flow 结构
+- 新增逻辑必须模块化：
+  - subTaskStore 或合并到 taskStore
+- 指标配置必须可扩展（未来支持更多类型）

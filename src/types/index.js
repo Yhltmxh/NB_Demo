@@ -208,6 +208,92 @@ export const RecordStatus = {
 }
 
 /**
+ * 子任务类型枚举
+ */
+export const SubTaskType = {
+  WATER: 'water',           // 水质
+  SEDIMENT: 'sediment',     // 沉积物
+  BIOLOGY: 'biology',       // 生物
+  FISHERY: 'fishery'        // 渔业资源
+}
+
+/**
+ * 子任务类型名称
+ */
+export const SubTaskTypeName = {
+  [SubTaskType.WATER]: '水质',
+  [SubTaskType.SEDIMENT]: '沉积物',
+  [SubTaskType.BIOLOGY]: '生物',
+  [SubTaskType.FISHERY]: '渔业资源'
+}
+
+/**
+ * 子任务状态
+ */
+export const SubTaskStatus = {
+  PENDING: 'pending',     // 待执行
+  RUNNING: 'running',    // 进行中
+  COMPLETED: 'completed' // 已完成
+}
+
+/**
+ * 子任务状态名称
+ */
+export const SubTaskStatusName = {
+  [SubTaskStatus.PENDING]: '待执行',
+  [SubTaskStatus.RUNNING]: '进行中',
+  [SubTaskStatus.COMPLETED]: '已完成'
+}
+
+/**
+ * 子任务状态颜色
+ */
+export const SubTaskStatusColor = {
+  [SubTaskStatus.PENDING]: 'info',
+  [SubTaskStatus.RUNNING]: 'warning',
+  [SubTaskStatus.COMPLETED]: 'success'
+}
+
+/**
+ * 执行状态
+ */
+export const ExecutionStatus = {
+  NOT_STARTED: 'not_started', // 未开始
+  IN_PROGRESS: 'in_progress', // 进行中
+  COMPLETED: 'completed'      // 已完成
+}
+
+/**
+ * 执行状态名称
+ */
+export const ExecutionStatusName = {
+  [ExecutionStatus.NOT_STARTED]: '未开始',
+  [ExecutionStatus.IN_PROGRESS]: '进行中',
+  [ExecutionStatus.COMPLETED]: '已完成'
+}
+
+/**
+ * 子任务 (SubTask)
+ * @typedef {Object} SubTask
+ * @property {string} id
+ * @property {string} taskId 所属任务ID
+ * @property {SubTaskType} type 子任务类型
+ * @property {string[]} indicators 该子任务的指标ID列表
+ * @property {SubTaskStatus} status 状态
+ */
+
+/**
+ * 子任务执行记录 (SubTaskExecution)
+ * @typedef {Object} SubTaskExecution
+ * @property {string} id
+ * @property {string} taskId 关联任务ID
+ * @property {string} subTaskId 关联子任务ID
+ * @property {string} stationCode 站位编号
+ * @property {number} progress 进度 (0-100)
+ * @property {ExecutionStatus} status 状态
+ */
+
+/**
  * 数据录入记录 (DataRecord)
  * @typedef {Object} DataRecord
  * @property {string} id
@@ -257,6 +343,54 @@ export const AvailableIndicators = [
   { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m²' }
 ]
 
+/**
+ * 子任务指标配置（按类型预置指标）
+ * 这些配置定义了每个子任务类型包含哪些指标
+ */
+export const SubTaskIndicatorConfig = {
+  [SubTaskType.WATER]: [
+    { id: 'wq_01', name: '水温', category: 'water_quality', unit: '℃' },
+    { id: 'wq_02', name: '盐度', category: 'water_quality', unit: '‰' },
+    { id: 'wq_03', name: 'pH', category: 'water_quality', unit: '' },
+    { id: 'wq_04', name: '溶解氧', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_05', name: 'COD', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_06', name: '氨氮', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_07', name: '硝酸盐', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_08', name: '亚硝酸盐', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_09', name: '活性磷酸盐', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_10', name: '悬浮物', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_11', name: '石油类', category: 'water_quality', unit: 'mg/L' },
+    { id: 'wq_12', name: '铜(Cu)', category: 'water_quality', unit: 'μg/L' },
+    { id: 'wq_13', name: '铅(Pb)', category: 'water_quality', unit: 'μg/L' },
+    { id: 'wq_14', name: '锌(Zn)', category: 'water_quality', unit: 'μg/L' },
+    { id: 'wq_15', name: '镉(Cd)', category: 'water_quality', unit: 'μg/L' }
+  ],
+  [SubTaskType.SEDIMENT]: [
+    { id: 'sed_01', name: '有机碳', category: 'sediment', unit: '%' },
+    { id: 'sed_02', name: '硫化物', category: 'sediment', unit: 'mg/kg' },
+    { id: 'sed_03', name: '石油类', category: 'sediment', unit: 'mg/kg' },
+    { id: 'sed_04', name: '锌(Zn)', category: 'sediment', unit: 'mg/kg' },
+    { id: 'sed_05', name: '铅(Pb)', category: 'sediment', unit: 'mg/kg' },
+    { id: 'sed_06', name: '铜(Cu)', category: 'sediment', unit: 'mg/kg' },
+    { id: 'sed_07', name: '镉(Cd)', category: 'sediment', unit: 'mg/kg' },
+    { id: 'sed_08', name: '粒度', category: 'sediment', unit: '' }
+  ],
+  [SubTaskType.BIOLOGY]: [
+    { id: 'bio_01', name: '叶绿素a', category: 'biology', unit: 'mg/m³' },
+    { id: 'bio_02', name: '浮游植物', category: 'biology', unit: '种' },
+    { id: 'bio_03', name: '浮游动物', category: 'biology', unit: '种' },
+    { id: 'bio_04', name: '底栖生物-种类', category: 'biology', unit: '种' },
+    { id: 'bio_05', name: '底栖生物-密度', category: 'biology', unit: 'ind/m²' },
+    { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m²' }
+  ],
+  [SubTaskType.FISHERY]: [
+    { id: 'fish_01', name: '鱼卵', category: 'fishery', unit: '个/m²' },
+    { id: 'fish_02', name: '仔鱼', category: 'fishery', unit: '尾/m²' },
+    { id: 'fish_03', name: '渔获物种类', category: 'fishery', unit: '种' },
+    { id: 'fish_04', name: '渔获量', category: 'fishery', unit: 'kg' }
+  ]
+}
+
 export default {
   TaskStatus,
   TaskStatusName,
@@ -271,5 +405,12 @@ export default {
   LayerType,
   LayerTypeName,
   RecordStatus,
-  AvailableIndicators
+  SubTaskType,
+  SubTaskTypeName,
+  SubTaskStatus,
+  SubTaskStatusName,
+  SubTaskStatusColor,
+  ExecutionStatus,
+  ExecutionStatusName,
+  SubTaskIndicatorConfig
 }

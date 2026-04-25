@@ -1,5 +1,77 @@
 # 项目更新日志
 
+## 2026-04-25 - 第四版更新（子任务拆解 + 进度管理）
+
+### 新增功能
+
+#### 子任务拆解体系
+
+任务审批通过后自动创建子任务，按监测要素类型划分：
+
+**子任务类型：**
+- 水质 (water) - 预置15项水质指标
+- 沉积物 (sediment) - 预置8项沉积物指标
+- 生物 (biology) - 预置6项生物指标
+- 渔业资源 (fishery) - 预置4项渔业指标
+
+#### 自动生成执行记录
+
+审批通过并启动任务时：
+- 根据任务配置的站位自动生成 SubTaskExecution 记录
+- 每站点 × 每子任务类型 = 执行记录数
+
+例如：任务有10个站位、2个子任务（水质+生物）
+→ 自动生成 20 条执行记录
+
+#### 进度计算
+
+- **子任务进度** = 该子任务下已完成站位数 / 总站位数
+- **任务总进度** = 所有子任务平均进度
+
+#### 轻量数据录入模拟
+
+在任务详情页，点击执行记录的"标记完成"按钮：
+- progress = 100
+- status = 已完成
+
+用于驱动进度变化
+
+### 数据模型
+
+**SubTask（子任务）**
+```javascript
+{
+  id, taskId, type, indicators: [], status
+}
+```
+
+**SubTaskExecution（子任务执行记录）**
+```javascript
+{
+  id, taskId, subTaskId, stationCode, stationName, progress, status
+}
+```
+
+### Store新增方法
+
+- `getSubTasksByTaskId(taskId)` - 获取任务的所有子任务
+- `getSubTaskExecutions(subTaskId)` - 获取子任务的执行记录
+- `getSubTaskProgress(subTaskId)` - 计算子任务进度
+- `getTaskProgress(taskId)` - 计算任务总进度
+- `completeExecution(executionId)` - 标记完成
+
+### 进度计算逻辑
+
+```javascript
+// 子任务进度
+subTaskProgress = sum(executions.progress) / executions.length
+
+// 任务总进度
+taskProgress = sum(subTasks.progress) / subTasks.length
+```
+
+---
+
 ## 2026-04-24 - 第三版更新（任务关联数据录入）
 
 ### 新增功能
