@@ -320,8 +320,8 @@ export const SubTaskStatusColor = {
  * 可用的指标列表 (用于选择)
  */
 export const AvailableIndicators = [
-  { id: 'wq_01', name: '水温', category: 'water_quality', unit: '℃' },
-  { id: 'wq_02', name: '盐度', category: 'water_quality', unit: '‰' },
+  { id: 'wq_01', name: '水温', category: 'water_quality', unit: '°C' },
+  { id: 'wq_02', name: '盐度', category: 'water_quality', unit: '' },
   { id: 'wq_03', name: 'pH', category: 'water_quality', unit: '' },
   { id: 'wq_04', name: '溶解氧', category: 'water_quality', unit: 'mg/L' },
   { id: 'wq_05', name: 'COD', category: 'water_quality', unit: 'mg/L' },
@@ -331,10 +331,10 @@ export const AvailableIndicators = [
   { id: 'wq_09', name: '活性磷酸盐', category: 'water_quality', unit: 'mg/L' },
   { id: 'wq_10', name: '悬浮物', category: 'water_quality', unit: 'mg/L' },
   { id: 'wq_11', name: '石油类', category: 'water_quality', unit: 'mg/L' },
-  { id: 'wq_12', name: '铜(Cu)', category: 'water_quality', unit: 'μg/L' },
-  { id: 'wq_13', name: '铅(Pb)', category: 'water_quality', unit: 'μg/L' },
-  { id: 'wq_14', name: '锌(Zn)', category: 'water_quality', unit: 'μg/L' },
-  { id: 'wq_15', name: '镉(Cd)', category: 'water_quality', unit: 'μg/L' },
+  { id: 'wq_12', name: '铜(Cu)', category: 'water_quality', unit: 'ug/L' },
+  { id: 'wq_13', name: '铅(Pb)', category: 'water_quality', unit: 'ug/L' },
+  { id: 'wq_14', name: '锌(Zn)', category: 'water_quality', unit: 'ug/L' },
+  { id: 'wq_15', name: '镉(Cd)', category: 'water_quality', unit: 'ug/L' },
   { id: 'sed_01', name: '有机碳', category: 'sediment', unit: '%' },
   { id: 'sed_02', name: '硫化物', category: 'sediment', unit: 'mg/kg' },
   { id: 'sed_03', name: '石油类', category: 'sediment', unit: 'mg/kg' },
@@ -343,12 +343,12 @@ export const AvailableIndicators = [
   { id: 'sed_06', name: '铜(Cu)', category: 'sediment', unit: 'mg/kg' },
   { id: 'sed_07', name: '镉(Cd)', category: 'sediment', unit: 'mg/kg' },
   { id: 'sed_08', name: '粒度', category: 'sediment', unit: '' },
-  { id: 'bio_01', name: '叶绿素a', category: 'biology', unit: 'mg/m³' },
+  { id: 'bio_01', name: '叶绿素a', category: 'biology', unit: 'mg/m3' },
   { id: 'bio_02', name: '浮游植物', category: 'biology', unit: '种' },
   { id: 'bio_03', name: '浮游动物', category: 'biology', unit: '种' },
   { id: 'bio_04', name: '底栖生物-种类', category: 'biology', unit: '种' },
-  { id: 'bio_05', name: '底栖生物-密度', category: 'biology', unit: 'ind/m²' },
-  { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m²' }
+  { id: 'bio_05', name: '底栖生物-密度', category: 'biology', unit: 'ind/m2' },
+  { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m2' }
 ]
 
 /**
@@ -357,8 +357,8 @@ export const AvailableIndicators = [
  */
 export const SubTaskIndicatorConfig = {
   [SubTaskType.WATER]: [
-    { id: 'wq_01', name: '水温', category: 'water', unit: '℃' },
-    { id: 'wq_02', name: '盐度', category: 'water', unit: '‰' },
+    { id: 'wq_01', name: '水温', category: 'water', unit: '°C' },
+    { id: 'wq_02', name: '盐度', category: 'water', unit: '' },
     { id: 'wq_03', name: 'pH', category: 'water', unit: '' },
     { id: 'wq_04', name: '溶解氧', category: 'water', unit: 'mg/L' },
     { id: 'wq_05', name: 'COD', category: 'water', unit: 'mg/L' },
@@ -368,10 +368,10 @@ export const SubTaskIndicatorConfig = {
     { id: 'wq_09', name: '活性磷酸盐', category: 'water', unit: 'mg/L' },
     { id: 'wq_10', name: '悬浮物', category: 'water', unit: 'mg/L' },
     { id: 'wq_11', name: '石油类', category: 'water', unit: 'mg/L' },
-    { id: 'wq_12', name: '铜(Cu)', category: 'water', unit: 'μg/L' },
-    { id: 'wq_13', name: '铅(Pb)', category: 'water', unit: 'μg/L' },
-    { id: 'wq_14', name: '锌(Zn)', category: 'water', unit: 'μg/L' },
-    { id: 'wq_15', name: '镉(Cd)', category: 'water', unit: 'μg/L' }
+    { id: 'wq_12', name: '铜(Cu)', category: 'water', unit: 'ug/L' },
+    { id: 'wq_13', name: '铅(Pb)', category: 'water', unit: 'ug/L' },
+    { id: 'wq_14', name: '锌(Zn)', category: 'water', unit: 'ug/L' },
+    { id: 'wq_15', name: '镉(Cd)', category: 'water', unit: 'ug/L' }
   ],
   [SubTaskType.SEDIMENT]: [
     { id: 'sed_01', name: '有机碳', category: 'sediment', unit: '%' },
@@ -384,12 +384,12 @@ export const SubTaskIndicatorConfig = {
     { id: 'sed_08', name: '粒度', category: 'sediment', unit: '' }
   ],
   [SubTaskType.BIOLOGY]: [
-    { id: 'bio_01', name: '叶绿素a', category: 'biology', unit: 'mg/m³' },
+    { id: 'bio_01', name: '叶绿素a', category: 'biology', unit: 'mg/m3' },
     { id: 'bio_02', name: '浮游植物', category: 'biology', unit: '种' },
     { id: 'bio_03', name: '浮游动物', category: 'biology', unit: '种' },
     { id: 'bio_04', name: '底栖生物-种类', category: 'biology', unit: '种' },
-    { id: 'bio_05', name: '底栖生物-密度', category: 'biology', unit: 'ind/m²' },
-    { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m²' }
+    { id: 'bio_05', name: '底栖生物-密度', category: 'biology', unit: 'ind/m2' },
+    { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m2' }
   ]
 }
 

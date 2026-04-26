@@ -17,7 +17,7 @@ const task = computed(() => taskStore.getTaskById(taskId.value))
 
 // 获取该站点该子任务的执行记录
 const execution = computed(() => {
-  return taskStore.executions.value.find(
+  return taskStore.executions.find(
     e => e.taskId === taskId.value && e.subTaskType === subTaskType.value && e.stationCode === stationCode.value
   )
 })

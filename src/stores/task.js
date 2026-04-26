@@ -120,96 +120,152 @@ export const useTaskStore = defineStore('task', () => {
 
   // 加载 Mock 数据
   function loadMockData() {
+    // 任务1：进行中，已完成部分执行
+    const task1Stations = [
+      { code: 'S01', name: '监测断面S01', subTaskTypes: ['water', 'biology'] },
+      { code: 'S02', name: '监测断面S02', subTaskTypes: ['water'] },
+      { code: 'S03', name: '监测断面S03', subTaskTypes: ['water', 'sediment'] },
+      { code: 'S04', name: '监测断面S04', subTaskTypes: ['water', 'sediment', 'biology'] },
+      { code: 'S05', name: '监测断面S05', subTaskTypes: ['sediment', 'biology'] }
+    ]
+
+    // 任务2：待审核
+    const task2Stations = [
+      { code: 'D01', name: '监测断面D01', subTaskTypes: ['water'] },
+      { code: 'D02', name: '监测断面D02', subTaskTypes: ['water', 'biology'] },
+      { code: 'D03', name: '监测断面D03', subTaskTypes: ['sediment'] }
+    ]
+
+    // 任务3：草稿
+    const task3Stations = [
+      { code: 'Y01', name: '监测断面Y01', subTaskTypes: ['water', 'biology'] },
+      { code: 'Y02', name: '监测断面Y02', subTaskTypes: ['water'] }
+    ]
+
+    // 任务4：已完成
+    const task4Stations = [
+      { code: 'A01', name: '监测断面A01', subTaskTypes: ['water', 'sediment'] },
+      { code: 'A02', name: '监测断面A02', subTaskTypes: ['water', 'sediment'] },
+      { code: 'A03', name: '监测断面A03', subTaskTypes: ['water', 'sediment', 'biology'] }
+    ]
+
     const mockTasks = [
       {
         id: 'task_001',
-        taskCode: 'HJ-2024-001',
-        name: '第一季度水质监测任务',
-        startTime: '2024-01-01',
-        endTime: '2024-03-31',
+        taskCode: 'HJ-2026-001',
+        name: '2026年第一季度海洋环境监测',
+        startTime: '2026-01-01',
+        endTime: '2026-03-31',
         frequency: 'quarterly',
         status: TaskStatus.RUNNING,
-        description: '第一季度例行水质监测任务',
+        description: '第一季度例行海洋环境监测任务',
         creator: '张三',
-        createTime: '2024-01-01 09:00',
+        createTime: '2026-01-01 09:00',
         rejectReason: '',
-        monitoringConfig: {
-          stations: [
-            { code: 'S01', name: '监测点1', subTaskTypes: ['water', 'biology'] },
-            { code: 'S02', name: '监测点2', subTaskTypes: ['water'] },
-            { code: 'S03', name: '监测点3', subTaskTypes: ['sediment', 'biology'] }
-          ]
-        }
+        monitoringConfig: { stations: task1Stations }
       },
       {
         id: 'task_002',
-        taskCode: 'HJ-2024-002',
-        name: '沉积物专项调查',
-        startTime: '2024-02-01',
-        endTime: '2024-04-30',
+        taskCode: 'HJ-2026-002',
+        name: '近岸海域专项调查',
+        startTime: '2026-02-01',
+        endTime: '2026-04-30',
         frequency: 'once',
         status: TaskStatus.PENDING,
-        description: '针对新发现区域的沉积物专项调查',
+        description: '针对近岸新发现污染区域的专项调查',
         creator: '李四',
-        createTime: '2024-02-01 10:30',
+        createTime: '2026-02-01 10:30',
         rejectReason: '',
-        monitoringConfig: {
-          stations: [
-            { code: 'HD01', name: '疏浚区1', subTaskTypes: ['water', 'sediment'] },
-            { code: 'HD02', name: '疏浚区2', subTaskTypes: ['sediment'] }
-          ]
-        }
+        monitoringConfig: { stations: task2Stations }
       },
       {
         id: 'task_003',
-        taskCode: 'HJ-2024-003',
-        name: '生物多样性年度调查',
-        startTime: '2024-03-01',
-        endTime: '2024-11-30',
-        frequency: 'yearly',
+        taskCode: 'HJ-2026-003',
+        name: '海域生物多样性调查',
+        startTime: '2026-03-01',
+        endTime: '2026-08-31',
+        frequency: 'half_year',
         status: TaskStatus.DRAFT,
-        description: '年度生物多样性调查任务',
+        description: '海洋生物多样性半年度调查',
         creator: '王五',
-        createTime: '2024-02-15 14:00',
+        createTime: '2026-03-15 14:00',
         rejectReason: '',
-        monitoringConfig: {
-          stations: [
-            { code: 'B01', name: '生物监测点1', subTaskTypes: ['water', 'biology'] },
-            { code: 'B02', name: '生物监测点2', subTaskTypes: ['biology'] },
-            { code: 'B03', name: '生物监测点3', subTaskTypes: ['water', 'sediment', 'biology'] },
-            { code: 'B04', name: '生物监测点4', subTaskTypes: ['biology'] }
-          ]
-        }
+        monitoringConfig: { stations: task3Stations }
+      },
+      {
+        id: 'task_004',
+        taskCode: 'HJ-2025-004',
+        name: '2025年度海域监测',
+        startTime: '2025-01-01',
+        endTime: '2025-12-31',
+        frequency: 'yearly',
+        status: TaskStatus.COMPLETED,
+        description: '2025年度海洋环境综合监测',
+        creator: '赵六',
+        createTime: '2025-01-01 08:00',
+        rejectReason: '',
+        monitoringConfig: { stations: task4Stations }
       }
     ]
 
     tasks.value = mockTasks
 
+    // 流转记录
     const mockFlows = {
       'task_001': [
-        { id: 'flow_001', taskId: 'task_001', action: FlowAction.CREATE, operator: '张三', comment: '创建任务', time: '2024-01-01 09:00' },
-        { id: 'flow_002', taskId: 'task_001', action: FlowAction.SUBMIT, operator: '张三', comment: '提交审核', time: '2024-01-02 10:00' },
-        { id: 'flow_003', taskId: 'task_001', action: FlowAction.APPROVE, operator: '李四', comment: '审核通过', time: '2024-01-02 14:00' },
-        { id: 'flow_004', taskId: 'task_001', action: FlowAction.START, operator: '李四', comment: '任务启动', time: '2024-01-03 09:00' }
+        { id: 'flow_001', taskId: 'task_001', action: FlowAction.CREATE, operator: '张三', comment: '创建任务', time: '2026-01-01 09:00' },
+        { id: 'flow_002', taskId: 'task_001', action: FlowAction.SUBMIT, operator: '张三', comment: '提交季度监测任务', time: '2026-01-02 10:00' },
+        { id: 'flow_003', taskId: 'task_001', action: FlowAction.APPROVE, operator: '李四', comment: '审核通过', time: '2026-01-02 14:00' },
+        { id: 'flow_004', taskId: 'task_001', action: FlowAction.START, operator: '李四', comment: '任务启动', time: '2026-01-03 09:00' }
       ],
       'task_002': [
-        { id: 'flow_005', taskId: 'task_002', action: FlowAction.CREATE, operator: '李四', comment: '创建任务', time: '2024-02-01 10:30' },
-        { id: 'flow_006', taskId: 'task_002', action: FlowAction.SUBMIT, operator: '李四', comment: '提交审核', time: '2024-02-02 09:00' }
+        { id: 'flow_005', taskId: 'task_002', action: FlowAction.CREATE, operator: '李四', comment: '创建任务', time: '2026-02-01 10:30' },
+        { id: 'flow_006', taskId: 'task_002', action: FlowAction.SUBMIT, operator: '李四', comment: '提交专项调查', time: '2026-02-02 09:00' }
+      ],
+      'task_003': [
+        { id: 'flow_007', taskId: 'task_003', action: FlowAction.CREATE, operator: '王五', comment: '创建任务', time: '2026-03-15 14:00' }
+      ],
+      'task_004': [
+        { id: 'flow_008', taskId: 'task_004', action: FlowAction.CREATE, operator: '赵六', comment: '创建任务', time: '2025-01-01 08:00' },
+        { id: 'flow_009', taskId: 'task_004', action: FlowAction.SUBMIT, operator: '赵六', comment: '提交年度监测', time: '2025-01-02 09:00' },
+        { id: 'flow_010', taskId: 'task_004', action: FlowAction.APPROVE, operator: '张三', comment: '审核通过', time: '2025-01-02 15:00' },
+        { id: 'flow_011', taskId: 'task_004', action: FlowAction.START, operator: '张三', comment: '启动监测', time: '2025-01-03 08:00' },
+        { id: 'flow_012', taskId: 'task_004', action: FlowAction.COMPLETE, operator: '赵六', comment: '年度监测完成', time: '2025-12-31 17:00' }
       ]
     }
     taskFlows.value = mockFlows
 
-    // 为 task_001 创建子任务和执行记录（模拟已进行中）
+    // 创建 task_001 的子任务和执行记录（进行中状态）
     createSubTasksForTask(mockTasks[0])
     generateExecutionsForTask(mockTasks[0])
 
-    // 模拟部分执行记录已完成
-    const task001Executions = executions.value.filter(e => e.taskId === 'task_001')
-    task001Executions.forEach((exec, idx) => {
-      if (idx === 0) {
-        exec.status = ExecutionStatus.COMPLETED
-        exec.dataValue = '已完成数据填写'
-      }
+    // task_001: 模拟部分完成
+    // 水质：3个站点，1个完成
+    // 沉积物：2个站点，1个完成
+    // 生物：3个站点，2个完成
+    const task001WaterExec = executions.value.filter(e => e.taskId === 'task_001' && e.subTaskType === 'water')
+    task001WaterExec[0].status = ExecutionStatus.COMPLETED
+    task001WaterExec[0].dataValue = '水温: 18.5; 盐度: 28; pH: 8.2; DO: 6.5'
+
+    const task001SedimentExec = executions.value.filter(e => e.taskId === 'task_001' && e.subTaskType === 'sediment')
+    task001SedimentExec[0].status = ExecutionStatus.COMPLETED
+    task001SedimentExec[0].dataValue = '有机碳: 1.2; 硫化物: 15; 石油类: 8'
+
+    const task001BiologyExec = executions.value.filter(e => e.taskId === 'task_001' && e.subTaskType === 'biology')
+    task001BiologyExec[0].status = ExecutionStatus.COMPLETED
+    task001BiologyExec[0].dataValue = '叶绿素a: 3.2; 浮游植物: 45种'
+    task001BiologyExec[1].status = ExecutionStatus.COMPLETED
+    task001BiologyExec[1].dataValue = '叶绿素a: 2.8; 浮游动物: 32种'
+
+    // 创建 task_004 的子任务和执行记录（已完成状态）
+    createSubTasksForTask(mockTasks[3])
+    generateExecutionsForTask(mockTasks[3])
+
+    // task_004: 全部完成
+    const task004Exec = executions.value.filter(e => e.taskId === 'task_004')
+    task004Exec.forEach(exec => {
+      exec.status = ExecutionStatus.COMPLETED
+      exec.dataValue = '数据已采集并录入系统'
     })
 
     saveData()
