@@ -33,10 +33,16 @@ const routes = [
     meta: { title: '编辑任务' }
   },
   {
-    path: '/tasks/:taskId/data-entry',
-    name: 'DataEntry',
-    component: () => import('../views/DataEntry.vue'),
-    meta: { title: '数据录入' }
+    path: '/tasks/:taskId/subtask/:subTaskType',
+    name: 'SubTaskDetail',
+    component: () => import('../views/SubTaskDetail.vue'),
+    meta: { title: '子任务详情' }
+  },
+  {
+    path: '/tasks/:taskId/subtask/:subTaskType/station/:stationCode',
+    name: 'DataFill',
+    component: () => import('../views/DataFill.vue'),
+    meta: { title: '数据填写' }
   }
 ]
 

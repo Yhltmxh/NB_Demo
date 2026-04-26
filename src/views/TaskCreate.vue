@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
-import { Frequency, FrequencyName, DepthType, DepthTypeName, AvailableIndicators } from '../types'
+import { Frequency, FrequencyName, SubTaskType, SubTaskTypeName, FIXED_SUB_TASK_TYPES } from '../types'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -18,12 +18,7 @@ const formData = ref({
   description: '',
   creator: '当前用户',
   monitoringConfig: {
-    stations: [],
-    indicators: [],
-    depths: {
-      type: DepthType.SURFACE,
-      customDepths: []
-    }
+    stations: []  // 每个站点选择要执行的子任务类型
   }
 })
 
@@ -53,44 +48,18 @@ const frequencyOptions = Object.entries(FrequencyName).map(([value, label]) => (
   label
 }))
 
-// 深度类型选项
-const depthTypeOptions = Object.entries(DepthTypeName).map(([value, label]) => ({
-  value,
-  label
+// 子任务类型选项（固定3个）
+const subTaskTypeOptions = FIXED_SUB_TASK_TYPES.map(type => ({
+  value: type,
+  label: SubTaskTypeName[type]
 }))
-
-// 指标选项（按类别分组）
-const indicatorOptions = computed(() => {
-  const categories = {
-    water_quality: { label: '水质指标', children: [] },
-    sediment: { label: '沉积物指标', children: [] },
-    biology: { label: '生物指标', children: [] }
-  }
-
-  AvailableIndicators.forEach(ind => {
-    if (categories[ind.category]) {
-      categories[ind.category].children.push({
-        value: ind.id,
-        label: `${ind.name}${ind.unit ? ` (${ind.unit})` : ''}`,
-        ...ind
-      })
-    }
-  })
-
-  return Object.values(categories)
-})
 
 // 新增站位
 const newStation = ref({
   code: '',
   name: '',
-  longitude: '',
-  latitude: '',
-  depth: null
+  subTaskTypes: []
 })
-
-// 自定义深度输入
-const newCustomDepth = ref('')
 
 // 添加站位
 function addStation() {
@@ -99,11 +68,17 @@ function addStation() {
     return
   }
 
+  if (newStation.value.subTaskTypes.length === 0) {
+    ElMessage.warning('请至少选择一个子任务类型')
+    return
+  }
+
   formData.value.monitoringConfig.stations.push({
-    ...newStation.value
+    ...newStation.value,
+    subTaskTypes: [...newStation.value.subTaskTypes]
   })
 
-  newStation.value = { code: '', name: '', longitude: '', latitude: '', depth: null }
+  newStation.value = { code: '', name: '', subTaskTypes: [] }
 }
 
 // 删除站位
@@ -111,39 +86,32 @@ function removeStation(index) {
   formData.value.monitoringConfig.stations.splice(index, 1)
 }
 
-// 添加自定义深度
-function addCustomDepth() {
-  if (!newCustomDepth.value) {
-    ElMessage.warning('请输入深度值')
-    return
-  }
-
-  if (!formData.value.monitoringConfig.depths.customDepths.includes(newCustomDepth.value)) {
-    formData.value.monitoringConfig.depths.customDepths.push(newCustomDepth.value)
-  }
-  newCustomDepth.value = ''
-}
-
-// 删除自定义深度
-function removeCustomDepth(index) {
-  formData.value.monitoringConfig.depths.customDepths.splice(index, 1)
-}
-
-// 深度类型变化
-function onDepthTypeChange() {
-  if (formData.value.monitoringConfig.depths.type !== DepthType.CUSTOM) {
-    formData.value.monitoringConfig.depths.customDepths = []
+// 站点选择子任务类型
+function toggleStationSubTaskType(stationIndex, subTaskType) {
+  const station = formData.value.monitoringConfig.stations[stationIndex]
+  const index = station.subTaskTypes.indexOf(subTaskType)
+  if (index > -1) {
+    station.subTaskTypes.splice(index, 1)
+  } else {
+    station.subTaskTypes.push(subTaskType)
   }
 }
 
-// 指标选择变化
-function onIndicatorsChange(values) {
-  // 将选中的指标ID转换为完整的指标对象
-  const selectedIndicators = values.map(id => {
-    return AvailableIndicators.find(ind => ind.id === id)
-  }).filter(Boolean)
+// 检查站点是否选择了某子任务类型
+function isStationHasSubTaskType(stationIndex, subTaskType) {
+  return formData.value.monitoringConfig.stations[stationIndex].subTaskTypes.includes(subTaskType)
+}
 
-  formData.value.monitoringConfig.indicators = selectedIndicators
+// 全选/取消全选某子任务类型
+function toggleAllStationsForType(subTaskType, checked) {
+  formData.value.monitoringConfig.stations.forEach(station => {
+    const index = station.subTaskTypes.indexOf(subTaskType)
+    if (checked && index === -1) {
+      station.subTaskTypes.push(subTaskType)
+    } else if (!checked && index > -1) {
+      station.subTaskTypes.splice(index, 1)
+    }
+  })
 }
 
 // 提交表单
@@ -157,8 +125,10 @@ async function handleSubmit() {
       return
     }
 
-    if (formData.value.monitoringConfig.indicators.length === 0) {
-      ElMessage.warning('请至少选择一个指标')
+    // 检查是否有站点选中了子任务
+    const hasSelected = formData.value.monitoringConfig.stations.some(s => s.subTaskTypes.length > 0)
+    if (!hasSelected) {
+      ElMessage.warning('请至少为一个站位选择子任务类型')
       return
     }
 
@@ -178,11 +148,6 @@ async function handleSubmit() {
 function handleCancel() {
   router.push('/tasks')
 }
-
-// 获取已选指标列表（用于显示）
-const selectedIndicators = computed(() => {
-  return formData.value.monitoringConfig.indicators
-})
 </script>
 
 <template>
@@ -273,141 +238,75 @@ const selectedIndicators = computed(() => {
           </el-form-item>
         </div>
 
-        <!-- 监测配置 -->
+        <!-- 站点配置（核心） -->
         <div class="form-section">
-          <h3 class="section-title">监测配置</h3>
+          <h3 class="section-title">站点配置</h3>
+          <p class="section-hint">每个站点可选择执行哪些子任务（勾选表示该站点需要执行该子任务）</p>
 
-          <!-- 站位配置 -->
-          <div class="config-block">
-            <h4 class="block-title">站位配置</h4>
-
-            <el-table
-              :data="formData.monitoringConfig.stations"
-              border
-              stripe
-              style="margin-bottom: 15px"
-              v-if="formData.monitoringConfig.stations.length > 0"
+          <!-- 站位表格 -->
+          <el-table
+            :data="formData.monitoringConfig.stations"
+            border
+            stripe
+            style="margin-bottom: 20px"
+            v-if="formData.monitoringConfig.stations.length > 0"
+          >
+            <el-table-column prop="code" label="站位编号" width="120" />
+            <el-table-column prop="name" label="站位名称" width="150" />
+            <el-table-column
+              v-for="typeOption in subTaskTypeOptions"
+              :key="typeOption.value"
+              :label="typeOption.label"
+              width="120"
+              align="center"
             >
-              <el-table-column prop="code" label="站位编号" width="120" />
-              <el-table-column prop="name" label="站位名称" width="150" />
-              <el-table-column prop="longitude" label="经度" width="120" />
-              <el-table-column prop="latitude" label="纬度" width="120" />
-              <el-table-column prop="depth" label="水深(m)" width="100" />
-              <el-table-column label="操作" width="80">
-                <template #default="{ $index }">
-                  <el-button type="danger" size="small" text @click="removeStation($index)">
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+              <template #default="{ $index }">
+                <el-checkbox
+                  :model-value="isStationHasSubTaskType($index, typeOption.value)"
+                  @change="(checked) => toggleStationSubTaskType($index, typeOption.value, checked)"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80">
+              <template #default="{ $index }">
+                <el-button type="danger" size="small" text @click="removeStation($index)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
 
-            <div class="add-station-form">
-              <el-row :gutter="10">
-                <el-col :span="4">
-                  <el-input v-model="newStation.code" placeholder="站位编号" />
-                </el-col>
-                <el-col :span="4">
-                  <el-input v-model="newStation.name" placeholder="站位名称" />
-                </el-col>
-                <el-col :span="4">
-                  <el-input v-model="newStation.longitude" placeholder="经度" />
-                </el-col>
-                <el-col :span="4">
-                  <el-input v-model="newStation.latitude" placeholder="纬度" />
-                </el-col>
-                <el-col :span="4">
-                  <el-input-number v-model="newStation.depth" :min="0" placeholder="水深" controls-position="right" />
-                </el-col>
-                <el-col :span="4">
-                  <el-button type="primary" @click="addStation">
-                    <el-icon><Plus /></el-icon>
-                    添加
-                  </el-button>
-                </el-col>
-              </el-row>
-            </div>
+          <!-- 表头说明 -->
+          <div class="station-table-header" v-if="formData.monitoringConfig.stations.length > 0">
+            <span class="header-label">勾选表示该站点需要执行该子任务</span>
           </div>
 
-          <!-- 指标配置 -->
-          <div class="config-block">
-            <h4 class="block-title">指标配置</h4>
-
-            <el-form-item label="选择指标">
-              <el-cascader
-                v-model="formData.monitoringConfig.indicators"
-                :options="indicatorOptions"
-                :props="{ multiple: true, label: 'label', value: 'id' }"
-                placeholder="请选择监测指标"
-                style="width: 100%"
-                @change="onIndicatorsChange"
-              />
-            </el-form-item>
-
-            <div class="selected-indicators" v-if="selectedIndicators.length > 0">
-              <el-tag
-                v-for="ind in selectedIndicators"
-                :key="ind.id"
-                size="small"
-                style="margin-right: 8px; margin-bottom: 4px"
-              >
-                {{ ind.name }}
-                <span v-if="ind.unit" style="color: #909399">({{ ind.unit }})</span>
-              </el-tag>
-            </div>
-          </div>
-
-          <!-- 深度配置 -->
-          <div class="config-block">
-            <h4 class="block-title">深度配置</h4>
-
-            <el-form-item label="深度类型">
-              <el-radio-group v-model="formData.monitoringConfig.depths.type" @change="onDepthTypeChange">
-                <el-radio
-                  v-for="option in depthTypeOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </el-radio>
-              </el-radio-group>
-            </el-form-item>
-
-            <!-- 自定义深度输入 -->
-            <el-form-item label="自定义深度" v-if="formData.monitoringConfig.depths.type === DepthType.CUSTOM">
-              <div class="custom-depths">
-                <el-tag
-                  v-for="(depth, index) in formData.monitoringConfig.depths.customDepths"
-                  :key="depth"
-                  closable
-                  size="small"
-                  style="margin-right: 8px"
-                  @close="removeCustomDepth(index)"
-                >
-                  {{ depth }}
-                </el-tag>
-              </div>
-              <div class="add-depth-form" style="margin-top: 10px">
-                <el-input
-                  v-model="newCustomDepth"
-                  placeholder="如 0.5m, 1m, 1.5m"
-                  style="width: 200px"
-                >
-                  <template #append>
-                    <el-button @click="addCustomDepth">添加</el-button>
-                  </template>
-                </el-input>
-              </div>
-            </el-form-item>
-
-            <div class="depth-hint" v-else>
-              <el-alert
-                :title="formData.monitoringConfig.depths.type === DepthType.SURFACE ? '仅采集表层水样' : '水深>10m时采表层和底层，≤10m时仅采表层'"
-                type="info"
-                :closable="false"
-                show-icon
-              />
-            </div>
+          <!-- 添加站位表单 -->
+          <div class="add-station-form">
+            <el-row :gutter="15" align="middle">
+              <el-col :span="4">
+                <el-input v-model="newStation.code" placeholder="站位编号" />
+              </el-col>
+              <el-col :span="4">
+                <el-input v-model="newStation.name" placeholder="站位名称" />
+              </el-col>
+              <el-col :span="12">
+                <el-checkbox-group v-model="newStation.subTaskTypes">
+                  <el-checkbox
+                    v-for="typeOption in subTaskTypeOptions"
+                    :key="typeOption.value"
+                    :value="typeOption.value"
+                    :label="typeOption.label"
+                  />
+                </el-checkbox-group>
+              </el-col>
+              <el-col :span="4">
+                <el-button type="primary" @click="addStation">
+                  <el-icon><Plus /></el-icon>
+                  添加
+                </el-button>
+              </el-col>
+            </el-row>
           </div>
         </div>
 
@@ -451,46 +350,30 @@ const selectedIndicators = computed(() => {
   font-size: 16px;
   font-weight: 600;
   color: #303133;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid #ebeef5;
 }
 
-.config-block {
-  margin-bottom: 25px;
-  padding: 15px;
-  background: #f5f7fa;
-  border-radius: 8px;
-}
-
-.block-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #606266;
+.section-hint {
+  font-size: 12px;
+  color: #909399;
   margin-bottom: 15px;
 }
 
-.add-station-form,
-.add-depth-form {
-  margin-top: 10px;
+.station-table-header {
+  margin-bottom: 10px;
 }
 
-.selected-indicators {
-  margin-top: 10px;
-  padding: 10px;
-  background: #fff;
-  border-radius: 4px;
-  min-height: 40px;
+.header-label {
+  font-size: 12px;
+  color: #909399;
 }
 
-.custom-depths {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.depth-hint {
-  margin-top: 10px;
+.add-station-form {
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 8px;
 }
 
 .form-actions {
