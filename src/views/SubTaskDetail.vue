@@ -60,7 +60,7 @@ function getStatusType(status) {
             :percentage="subTaskProgress"
             :status="subTaskProgress >= 100 ? 'success' : 'warning'"
             :stroke-width="10"
-            style="width: 150px"
+            style="width: 200px"
           />
         </el-descriptions-item>
       </el-descriptions>
@@ -162,6 +162,10 @@ function getStatusType(status) {
 
 .no-data {
   color: #c0c4cc;
+}
+
+.stations-card .el-button {
+  font-size: 14px;
 }
 
 .indicators-list {

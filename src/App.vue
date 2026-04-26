@@ -27,7 +27,7 @@ function handleMenuSelect(index) {
     <!-- 侧边栏 -->
     <el-aside width="220px" class="sidebar">
       <div class="logo">
-        <el-icon size="24"><Water /></el-icon>
+        <el-icon size="24"><Odometer /></el-icon>
         <span v-if="!isCollapse">环境监测系统</span>
       </div>
       <el-menu
@@ -82,13 +82,15 @@ function handleMenuSelect(index) {
 .logo {
   height: 60px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-size: 16px;
+  gap: 5px;
+  font-size: 14px;
   font-weight: bold;
   color: #fff;
   border-bottom: 1px solid #3d4a5c;
+  padding: 8px 0;
 }
 
 .sidebar-menu {
@@ -144,5 +146,6 @@ function handleMenuSelect(index) {
 .main-content {
   background-color: #f0f2f5;
   padding: 20px;
+  max-width: 100%;
 }
 </style>

@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
 import { TaskStatus, TaskStatusName, TaskStatusColor, FrequencyName, FlowAction } from '../types'
+import { ElMessage } from 'element-plus'
 import ApprovalDialog from '../components/ApprovalDialog.vue'
 
 const router = useRouter()
@@ -238,7 +239,7 @@ function getStatusTagType(status) {
         <el-table-column prop="creator" label="创建人" width="100" />
         <el-table-column prop="createTime" label="创建时间" width="160" />
 
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <template v-for="action in getAvailableActions(row)" :key="action.key">
@@ -311,7 +312,12 @@ function getStatusTagType(status) {
 
 .action-buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.action-buttons .el-button {
+  padding: 4px 8px;
+  font-size: 14px;
 }
 </style>

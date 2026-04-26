@@ -121,6 +121,7 @@ function editTask() {
             :percentage="taskProgress"
             :status="taskProgress >= 100 ? 'success' : taskProgress >= 50 ? 'warning' : 'exception'"
             :stroke-width="20"
+            style="flex: 1"
           />
           <span class="progress-text">{{ taskProgress }}%</span>
         </div>
@@ -148,14 +149,16 @@ function editTask() {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="progress" label="进度" min-width="200">
+        <el-table-column prop="progress" label="进度" min-width="320">
           <template #default="{ row }">
             <div class="subtask-progress">
               <el-progress
                 :percentage="getSubTaskProgress(row.type)"
                 :status="getSubTaskProgress(row.type) >= 100 ? 'success' : getSubTaskProgress(row.type) >= 50 ? 'warning' : 'exception'"
                 :stroke-width="10"
+                style="flex: 1"
               />
+              <span class="subtask-progress-text">{{ getSubTaskProgress(row.type) }}%</span>
             </div>
           </template>
         </el-table-column>
@@ -165,6 +168,7 @@ function editTask() {
               type="primary"
               size="small"
               text
+              class="detail-btn"
               @click="goToSubTaskDetail(row.type)"
             >
               查看详情
@@ -290,6 +294,19 @@ function editTask() {
 }
 
 .subtask-progress {
-  width: 150px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtask-progress-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #409eff;
+  min-width: 45px;
+}
+
+.detail-btn {
+  font-size: 14px;
 }
 </style>

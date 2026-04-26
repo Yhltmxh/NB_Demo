@@ -339,7 +339,8 @@ function handleCancel() {
 }
 
 .task-form {
-  max-width: 800px;
+  max-width: 750px;
+  margin: 0 auto;
 }
 
 .form-section {
