@@ -108,6 +108,12 @@ async function handleDelete(task) {
   }
 }
 
+// 重置数据
+function handleResetData() {
+  taskStore.resetData()
+  ElMessage.success('数据已重置')
+}
+
 // 审核对话框引用
 const approvalDialogRef = ref(null)
 
@@ -172,6 +178,10 @@ function getStatusTagType(status) {
           <el-button type="primary" @click="goToCreate">
             <el-icon><Plus /></el-icon>
             创建任务
+          </el-button>
+          <el-button type="warning" @click="handleResetData">
+            <el-icon><Refresh /></el-icon>
+            重置数据
           </el-button>
         </div>
       </div>

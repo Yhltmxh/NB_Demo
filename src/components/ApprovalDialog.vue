@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { FrequencyName, DepthTypeName } from '../types'
+import { FrequencyName, SubTaskTypeName, FIXED_SUB_TASK_TYPES } from '../types'
 
 const props = defineProps({
-  // 可以传入预填的数据
 })
 
 const emit = defineEmits(['result'])
@@ -25,14 +24,19 @@ function open(task, action) {
   dialogVisible.value = true
 }
 
-// 深度配置显示
-const depthDisplay = computed(() => {
-  if (!currentTask.value) return ''
-  const { depths } = currentTask.value.monitoringConfig
-  if (depths.type === 'custom') {
-    return depths.customDepths.join(', ') || '未设置'
-  }
-  return DepthTypeName[depths.type] || depths.type
+// 站位配置显示
+const stationDisplay = computed(() => {
+  if (!currentTask.value) return []
+  return currentTask.value.monitoringConfig?.stations || []
+})
+
+// 子任务配置显示
+const subTaskTypesDisplay = computed(() => {
+  return FIXED_SUB_TASK_TYPES.map(type => ({
+    type,
+    name: SubTaskTypeName[type],
+    stationCount: stationDisplay.value.filter(s => s.subTaskTypes?.includes(type)).length
+  }))
 })
 
 // 确认
@@ -89,37 +93,48 @@ defineExpose({ open })
         </el-descriptions>
       </el-card>
 
-      <!-- 监测配置 -->
+      <!-- 站点配置 -->
       <div class="config-section">
-        <h4 class="section-title">监测配置</h4>
+        <h4 class="section-title">站点配置</h4>
 
-        <div class="config-item">
-          <span class="config-label">站位 ({{ currentTask.monitoringConfig.stations.length }}个):</span>
-          <el-tag
-            v-for="station in currentTask.monitoringConfig.stations"
-            :key="station.code"
-            size="small"
-            style="margin-right: 4px; margin-bottom: 2px"
+        <el-table
+          :data="stationDisplay"
+          border
+          size="small"
+          style="margin-bottom: 15px"
+          v-if="stationDisplay.length > 0"
+        >
+          <el-table-column prop="code" label="站位编号" width="120" />
+          <el-table-column prop="name" label="站位名称" width="150" />
+          <el-table-column label="子任务" min-width="200">
+            <template #default="{ row }">
+              <el-tag
+                v-for="type in (row.subTaskTypes || [])"
+                :key="type"
+                size="small"
+                style="margin-right: 4px"
+              >
+                {{ SubTaskTypeName[type] }}
+              </el-tag>
+              <span v-if="!row.subTaskTypes?.length" class="no-data">未配置</span>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div v-else class="no-data">暂无站点配置</div>
+      </div>
+
+      <!-- 子任务统计 -->
+      <div class="config-section">
+        <h4 class="section-title">子任务统计</h4>
+        <div class="subtask-stats">
+          <div
+            v-for="item in subTaskTypesDisplay"
+            :key="item.type"
+            class="stat-item"
           >
-            {{ station.code }}
-          </el-tag>
-        </div>
-
-        <div class="config-item">
-          <span class="config-label">指标 ({{ currentTask.monitoringConfig.indicators.length }}个):</span>
-          <el-tag
-            v-for="ind in currentTask.monitoringConfig.indicators"
-            :key="ind.id"
-            size="small"
-            style="margin-right: 4px; margin-bottom: 2px"
-          >
-            {{ ind.name }}
-          </el-tag>
-        </div>
-
-        <div class="config-item">
-          <span class="config-label">深度:</span>
-          <el-tag type="primary" size="small">{{ depthDisplay }}</el-tag>
+            <el-tag size="small">{{ item.name }}</el-tag>
+            <span class="stat-count">{{ item.stationCount }}个站点</span>
+          </div>
         </div>
       </div>
 
@@ -170,18 +185,20 @@ defineExpose({ open })
   margin-bottom: 10px;
 }
 
-.config-item {
-  margin-bottom: 10px;
+.subtask-stats {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  gap: 20px;
 }
 
-.config-label {
-  font-size: 14px;
-  color: #606266;
-  margin-right: 10px;
-  min-width: 100px;
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-count {
+  font-size: 12px;
+  color: #909399;
 }
 
 .comment-section {
@@ -192,5 +209,10 @@ defineExpose({ open })
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.no-data {
+  color: #909399;
+  font-size: 14px;
 }
 </style>

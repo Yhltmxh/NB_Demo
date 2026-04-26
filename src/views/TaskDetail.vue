@@ -58,7 +58,13 @@ function editTask() {
     <el-card class="info-card">
       <template #header>
         <div class="card-header">
-          <span>任务信息</span>
+          <div class="header-left">
+            <el-button size="small" @click="goBack">
+              <el-icon><ArrowLeft /></el-icon>
+              返回
+            </el-button>
+            <span>任务信息</span>
+          </div>
           <div class="header-actions">
             <el-button type="primary" size="small" @click="editTask" v-if="task.status === 'draft' || task.status === 'rejected'">
               <el-icon><Edit /></el-icon>
@@ -199,13 +205,6 @@ function editTask() {
 
       <el-empty v-else description="暂无流转记录" />
     </el-card>
-
-    <div class="back-button">
-      <el-button @click="goBack">
-        <el-icon><ArrowLeft /></el-icon>
-        返回列表
-      </el-button>
-    </div>
   </div>
 
   <el-empty v-else description="任务不存在" />
@@ -228,6 +227,12 @@ function editTask() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .header-actions {
