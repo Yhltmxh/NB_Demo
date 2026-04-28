@@ -143,6 +143,11 @@ function handleSubmit() {
   margin: 0 auto;
 }
 
+.form-card :deep(.el-form) {
+  width: 500px;
+  margin: 0 auto;
+}
+
 .header-card,
 .completed-card,
 .form-card {
