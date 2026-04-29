@@ -39,6 +39,12 @@ const routes = [
     meta: { title: '子任务详情' }
   },
   {
+    path: '/tasks/:taskId/verify',
+    name: 'DataVerify',
+    component: () => import('../views/DataVerify.vue'),
+    meta: { title: '数据校验' }
+  },
+  {
     path: '/tasks/:taskId/subtask/:subTaskType/station/:stationCode',
     name: 'DataFill',
     component: () => import('../views/DataFill.vue'),

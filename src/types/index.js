@@ -7,6 +7,7 @@ export const TaskStatus = {
   APPROVED: 'approved',     // 已通过
   REJECTED: 'rejected',     // 已驳回
   RUNNING: 'running',       // 进行中
+  VERIFYING: 'verifying',   // 校验中
   COMPLETED: 'completed'    // 已完成
 }
 
@@ -19,6 +20,7 @@ export const TaskStatusName = {
   [TaskStatus.APPROVED]: '已通过',
   [TaskStatus.REJECTED]: '已驳回',
   [TaskStatus.RUNNING]: '进行中',
+  [TaskStatus.VERIFYING]: '校验中',
   [TaskStatus.COMPLETED]: '已完成'
 }
 
@@ -31,6 +33,7 @@ export const TaskStatusColor = {
   [TaskStatus.APPROVED]: 'primary',
   [TaskStatus.REJECTED]: 'danger',
   [TaskStatus.RUNNING]: 'success',
+  [TaskStatus.VERIFYING]: 'warning',
   [TaskStatus.COMPLETED]: 'success'
 }
 
@@ -43,7 +46,10 @@ export const FlowAction = {
   APPROVE: 'approve',     // 审核通过
   REJECT: 'reject',       // 驳回
   START: 'start',         // 启动任务
-  COMPLETE: 'complete'   // 完成任务
+  COMPLETE: 'complete',   // 完成任务
+  SUBMIT_REVIEW: 'submit_review', // 提交校验
+  VERIFY_APPROVE: 'verify_approve', // 校验通过
+  VERIFY_REJECT: 'verify_reject'  // 校验退回
 }
 
 /**
@@ -55,7 +61,10 @@ export const FlowActionName = {
   [FlowAction.APPROVE]: '审核通过',
   [FlowAction.REJECT]: '驳回',
   [FlowAction.START]: '启动任务',
-  [FlowAction.COMPLETE]: '完成任务'
+  [FlowAction.COMPLETE]: '完成任务',
+  [FlowAction.SUBMIT_REVIEW]: '提交校验',
+  [FlowAction.VERIFY_APPROVE]: '校验通过',
+  [FlowAction.VERIFY_REJECT]: '校验退回'
 }
 
 /**
@@ -169,12 +178,13 @@ export const DepthTypeName = {
  * 定义每个状态下可以执行的动作
  */
 export const StatusFlow = {
-  [TaskStatus.DRAFT]: [TaskStatus.PENDING],      // 草稿 -> 待审核
-  [TaskStatus.PENDING]: [TaskStatus.APPROVED, TaskStatus.REJECTED],  // 待审核 -> 通过/驳回
-  [TaskStatus.APPROVED]: [TaskStatus.RUNNING],   // 已通过 -> 进行中
-  [TaskStatus.REJECTED]: [TaskStatus.DRAFT],     // 驳回 -> 草稿
-  [TaskStatus.RUNNING]: [TaskStatus.COMPLETED],  // 进行中 -> 已完成
-  [TaskStatus.COMPLETED]: []                      // 已完成(终态)
+  [TaskStatus.DRAFT]: [TaskStatus.PENDING],
+  [TaskStatus.PENDING]: [TaskStatus.APPROVED, TaskStatus.REJECTED],
+  [TaskStatus.APPROVED]: [TaskStatus.RUNNING],
+  [TaskStatus.REJECTED]: [TaskStatus.DRAFT],
+  [TaskStatus.RUNNING]: [TaskStatus.VERIFYING],
+  [TaskStatus.VERIFYING]: [TaskStatus.COMPLETED, TaskStatus.RUNNING],
+  [TaskStatus.COMPLETED]: []
 }
 
 /**

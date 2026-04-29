@@ -2,18 +2,29 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
-import { SubTaskTypeName, ExecutionStatusName } from '../types'
+import { ExecutionStatusName } from '../types'
 import { ElMessage } from 'element-plus'
+import { useTemplateStore } from '../stores/template'
 
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
+const templateStore = useTemplateStore()
 
 const taskId = computed(() => route.params.taskId)
 const subTaskType = computed(() => route.params.subTaskType)
 const stationCode = computed(() => route.params.stationCode)
 
 const task = computed(() => taskStore.getTaskById(taskId.value))
+
+// 获取子任务显示名称
+const subTaskName = computed(() => {
+  const tpl = templateStore.getTemplateById(subTaskType.value)
+  if (tpl) return tpl.name
+  const byCode = templateStore.getTemplateByCode(subTaskType.value)
+  if (byCode) return byCode.name
+  return subTaskType.value
+})
 
 // 获取该站点该子任务的执行记录
 const execution = computed(() => {
@@ -83,7 +94,7 @@ function handleSubmit() {
           {{ stationCode }}
         </el-descriptions-item>
         <el-descriptions-item label="子任务类型">
-          {{ SubTaskTypeName[subTaskType] }}
+          {{ subTaskName }}
         </el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag :type="isCompleted ? 'success' : 'info'">

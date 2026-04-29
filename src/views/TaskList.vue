@@ -61,7 +61,16 @@ function getAvailableActions(task) {
   }
 
   if (task.status === TaskStatus.RUNNING) {
-    actions.push({ key: 'complete', label: '完成任务', icon: 'Finished' })
+    actions.push({ key: 'detail', label: '录入', icon: 'Edit' })
+    const taskExecs = taskStore.getExecutionsByTaskId(task.id)
+    const allCompleted = taskExecs.length > 0 && taskExecs.every(e => e.status === 'completed')
+    if (allCompleted) {
+      actions.push({ key: 'review', label: '提交校验', icon: 'Checked' })
+    }
+  }
+
+  if (task.status === TaskStatus.VERIFYING) {
+    actions.push({ key: 'verify', label: '校验', icon: 'CircleCheck' })
   }
 
   if (task.status === TaskStatus.COMPLETED) {
@@ -77,6 +86,9 @@ async function handleAction(key, task) {
     case 'edit':
       router.push(`/tasks/${task.id}/edit`)
       break
+    case 'detail':
+      router.push(`/tasks/${task.id}`)
+      break
     case 'submit':
       await taskStore.submitTask(task.id, '当前用户', '提交审核')
       break
@@ -89,8 +101,11 @@ async function handleAction(key, task) {
     case 'start':
       await taskStore.startTask(task.id, '管理员', '启动任务')
       break
-    case 'complete':
-      await taskStore.completeTask(task.id, '管理员', '完成任务')
+    case 'review':
+      await taskStore.submitForReview(task.id, '管理员')
+      break
+    case 'verify':
+      router.push(`/tasks/${task.id}/verify`)
       break
     case 'delete':
       await handleDelete(task)

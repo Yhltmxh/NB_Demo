@@ -138,8 +138,32 @@ export const useTaskStore = defineStore('task', () => {
     })
   }
 
+  // 生成模拟数据值
+  function generateMockValue(indicatorId, unit, stationCode) {
+    const hash = (indicatorId + stationCode).split('').reduce((s, c) => s + c.charCodeAt(0), 0)
+    const base = (hash % 100) / 10
+
+    if (unit === '°C') return (15 + base * 1.5).toFixed(1)
+    if (unit === 'mg/L' || unit === 'mg/kg') return (0.5 + base * 0.3).toFixed(2)
+    if (unit === 'ug/L') return (1 + base * 2).toFixed(1)
+    if (unit === 'mg/m3') return (2 + base * 0.5).toFixed(1)
+    if (unit === '%') return (base * 0.5).toFixed(2)
+    if (unit === 'm/s') return (3 + base * 0.5).toFixed(1)
+    if (unit === 'm') return (5 + base * 2).toFixed(1)
+    if (unit === 'hPa') return (1000 + hash % 50).toFixed(0)
+    if (unit === '级') return Math.floor(base * 0.6 + 1).toString()
+    if (unit === 'ind/m2') return Math.floor(50 + base * 30).toString()
+    if (unit === 'g/m2') return (10 + base * 5).toFixed(1)
+    if (unit === 'kg/km2') return (100 + base * 50).toFixed(0)
+    if (unit === '°') return Math.floor(10 + base * 30).toString()
+    if (unit === 'kg') return (5 + base * 2).toFixed(1)
+    if (unit === '种') return Math.floor(15 + base * 10).toString()
+    return (base * 1.5).toFixed(1)
+  }
+
   // 加载 Mock 数据
   function loadMockData() {
+    const templateStore = useTemplateStore()
     // 任务1：进行中，已完成部分执行
     const task1Stations = [
       { code: 'S01', name: '监测断面S01', subTaskTypes: ['water', 'biology', 'fishery'] },
@@ -179,7 +203,7 @@ export const useTaskStore = defineStore('task', () => {
         frequency: 'quarterly',
         status: TaskStatus.RUNNING,
         description: '第一季度例行海洋环境监测任务',
-        creator: '张三',
+        creator: '用户1',
         createTime: '2026-01-01 09:00',
         rejectReason: '',
         monitoringConfig: { stations: task1Stations }
@@ -193,7 +217,7 @@ export const useTaskStore = defineStore('task', () => {
         frequency: 'once',
         status: TaskStatus.PENDING,
         description: '针对近岸新发现污染区域的专项调查',
-        creator: '李四',
+        creator: '用户2',
         createTime: '2026-02-01 10:30',
         rejectReason: '',
         monitoringConfig: { stations: task2Stations }
@@ -207,7 +231,7 @@ export const useTaskStore = defineStore('task', () => {
         frequency: 'half_year',
         status: TaskStatus.DRAFT,
         description: '海洋生物多样性半年度调查',
-        creator: '王五',
+        creator: '用户3',
         createTime: '2026-03-15 14:00',
         rejectReason: '',
         monitoringConfig: { stations: task3Stations }
@@ -221,7 +245,7 @@ export const useTaskStore = defineStore('task', () => {
         frequency: 'yearly',
         status: TaskStatus.COMPLETED,
         description: '2025年度海洋环境综合监测',
-        creator: '赵六',
+        creator: '用户4',
         createTime: '2025-01-01 08:00',
         rejectReason: '',
         monitoringConfig: { stations: task4Stations }
@@ -233,59 +257,71 @@ export const useTaskStore = defineStore('task', () => {
     // 流转记录
     const mockFlows = {
       'task_001': [
-        { id: 'flow_001', taskId: 'task_001', action: FlowAction.CREATE, operator: '张三', comment: '创建任务', time: '2026-01-01 09:00' },
-        { id: 'flow_002', taskId: 'task_001', action: FlowAction.SUBMIT, operator: '张三', comment: '提交季度监测任务', time: '2026-01-02 10:00' },
-        { id: 'flow_003', taskId: 'task_001', action: FlowAction.APPROVE, operator: '李四', comment: '审核通过', time: '2026-01-02 14:00' },
-        { id: 'flow_004', taskId: 'task_001', action: FlowAction.START, operator: '李四', comment: '任务启动', time: '2026-01-03 09:00' }
+        { id: 'flow_001', taskId: 'task_001', action: FlowAction.CREATE, operator: '用户1', comment: '创建任务', time: '2026-01-01 09:00' },
+        { id: 'flow_002', taskId: 'task_001', action: FlowAction.SUBMIT, operator: '用户1', comment: '提交季度监测任务', time: '2026-01-02 10:00' },
+        { id: 'flow_003', taskId: 'task_001', action: FlowAction.APPROVE, operator: '用户2', comment: '审核通过', time: '2026-01-02 14:00' },
+        { id: 'flow_004', taskId: 'task_001', action: FlowAction.START, operator: '用户2', comment: '任务启动', time: '2026-01-03 09:00' }
       ],
       'task_002': [
-        { id: 'flow_005', taskId: 'task_002', action: FlowAction.CREATE, operator: '李四', comment: '创建任务', time: '2026-02-01 10:30' },
-        { id: 'flow_006', taskId: 'task_002', action: FlowAction.SUBMIT, operator: '李四', comment: '提交专项调查', time: '2026-02-02 09:00' }
+        { id: 'flow_005', taskId: 'task_002', action: FlowAction.CREATE, operator: '用户2', comment: '创建任务', time: '2026-02-01 10:30' },
+        { id: 'flow_006', taskId: 'task_002', action: FlowAction.SUBMIT, operator: '用户2', comment: '提交专项调查', time: '2026-02-02 09:00' }
       ],
       'task_003': [
-        { id: 'flow_007', taskId: 'task_003', action: FlowAction.CREATE, operator: '王五', comment: '创建任务', time: '2026-03-15 14:00' }
+        { id: 'flow_007', taskId: 'task_003', action: FlowAction.CREATE, operator: '用户3', comment: '创建任务', time: '2026-03-15 14:00' }
       ],
       'task_004': [
-        { id: 'flow_008', taskId: 'task_004', action: FlowAction.CREATE, operator: '赵六', comment: '创建任务', time: '2025-01-01 08:00' },
-        { id: 'flow_009', taskId: 'task_004', action: FlowAction.SUBMIT, operator: '赵六', comment: '提交年度监测', time: '2025-01-02 09:00' },
-        { id: 'flow_010', taskId: 'task_004', action: FlowAction.APPROVE, operator: '张三', comment: '审核通过', time: '2025-01-02 15:00' },
-        { id: 'flow_011', taskId: 'task_004', action: FlowAction.START, operator: '张三', comment: '启动监测', time: '2025-01-03 08:00' },
-        { id: 'flow_012', taskId: 'task_004', action: FlowAction.COMPLETE, operator: '赵六', comment: '年度监测完成', time: '2025-12-31 17:00' }
+        { id: 'flow_008', taskId: 'task_004', action: FlowAction.CREATE, operator: '用户4', comment: '创建任务', time: '2025-01-01 08:00' },
+        { id: 'flow_009', taskId: 'task_004', action: FlowAction.SUBMIT, operator: '用户4', comment: '提交年度监测', time: '2025-01-02 09:00' },
+        { id: 'flow_010', taskId: 'task_004', action: FlowAction.APPROVE, operator: '用户1', comment: '审核通过', time: '2025-01-02 15:00' },
+        { id: 'flow_011', taskId: 'task_004', action: FlowAction.START, operator: '用户1', comment: '启动监测', time: '2025-01-03 08:00' },
+        { id: 'flow_012', taskId: 'task_004', action: FlowAction.SUBMIT_REVIEW, operator: '用户4', comment: '数据全部录入完成，提交校验', time: '2025-12-01 09:00' },
+        { id: 'flow_013', taskId: 'task_004', action: FlowAction.VERIFY_APPROVE, operator: '用户1', comment: '校验通过，数据无误', time: '2025-12-15 10:00' }
       ]
     }
     taskFlows.value = mockFlows
 
-    // 创建 task_001 的子任务和执行记录（进行中状态）
+    // 创建 task_001 的子任务和执行记录（所有数据已录入完成，等待提交校验）
     createSubTasksForTask(mockTasks[0])
     generateExecutionsForTask(mockTasks[0])
 
-    // task_001: 模拟部分完成
-    // 水质：3个站点，1个完成
-    // 沉积物：2个站点，1个完成
-    // 生物：3个站点，2个完成
-    const task001WaterExec = executions.value.filter(e => e.taskId === 'task_001' && e.subTaskType === 'water')
-    task001WaterExec[0].status = ExecutionStatus.COMPLETED
-    task001WaterExec[0].dataValue = '水温: 18.5; 盐度: 28; pH: 8.2; DO: 6.5'
-
-    const task001SedimentExec = executions.value.filter(e => e.taskId === 'task_001' && e.subTaskType === 'sediment')
-    task001SedimentExec[0].status = ExecutionStatus.COMPLETED
-    task001SedimentExec[0].dataValue = '有机碳: 1.2; 硫化物: 15; 石油类: 8'
-
-    const task001BiologyExec = executions.value.filter(e => e.taskId === 'task_001' && e.subTaskType === 'biology')
-    task001BiologyExec[0].status = ExecutionStatus.COMPLETED
-    task001BiologyExec[0].dataValue = '叶绿素a: 3.2; 浮游植物: 45种'
-    task001BiologyExec[1].status = ExecutionStatus.COMPLETED
-    task001BiologyExec[1].dataValue = '叶绿素a: 2.8; 浮游动物: 32种'
+    // task_001: 模拟部分站点数据已录入（约60%完成度）
+    const task001Exec = executions.value.filter(e => e.taskId === 'task_001')
+    const completedCount = Math.floor(task001Exec.length * 0.6)
+    task001Exec.forEach((exec, index) => {
+      if (index < completedCount) {
+        exec.status = ExecutionStatus.COMPLETED
+        const tpl = templateStore.getTemplateByCode(exec.subTaskType)
+        if (tpl && tpl.indicators) {
+          exec.dataValue = tpl.indicators.map(ind => {
+            return `${ind.name}: ${generateMockValue(ind.id, ind.unit, exec.stationCode)}`
+          }).join('; ')
+        } else {
+          exec.dataValue = exec.subTaskType + ': 数据已录入'
+        }
+      }
+    })
 
     // 创建 task_004 的子任务和执行记录（已完成状态）
     createSubTasksForTask(mockTasks[3])
     generateExecutionsForTask(mockTasks[3])
 
-    // task_004: 全部完成
+    // task_004: 全部完成（校验通过）
+    // 更新子任务状态为已完成
+    subTasks.value.filter(st => st.taskId === 'task_004').forEach(st => {
+      st.status = SubTaskStatus.COMPLETED
+    })
     const task004Exec = executions.value.filter(e => e.taskId === 'task_004')
     task004Exec.forEach(exec => {
       exec.status = ExecutionStatus.COMPLETED
-      exec.dataValue = '数据已采集并录入系统'
+      exec.verifyStatus = 'approved'
+      const tpl = templateStore.getTemplateByCode(exec.subTaskType)
+      if (tpl && tpl.indicators) {
+        exec.dataValue = tpl.indicators.map(ind => {
+          return `${ind.name}: ${generateMockValue(ind.id, ind.unit, exec.stationCode)}`
+        }).join('; ')
+      } else {
+        exec.dataValue = exec.subTaskType + ': 数据已采集并录入系统'
+      }
     })
 
     saveData()
@@ -447,13 +483,88 @@ export const useTaskStore = defineStore('task', () => {
     task.status = TaskStatus.COMPLETED
     addFlow(taskId, FlowAction.COMPLETE, operator, comment || '任务完成')
 
-    // 更新所有子任务状态
     subTasks.value.filter(st => st.taskId === taskId).forEach(st => {
       st.status = SubTaskStatus.COMPLETED
     })
 
     saveData()
     return { success: true, message: '任务已完成' }
+  }
+
+  // 提交校验
+  function submitForReview(taskId, operator = '管理员') {
+    const task = tasks.value.find(t => t.id === taskId)
+    if (!task) return { success: false, message: '任务不存在' }
+
+    if (task.status !== TaskStatus.RUNNING) {
+      return { success: false, message: '只有进行中的任务才能提交校验' }
+    }
+
+    task.status = TaskStatus.VERIFYING
+    addFlow(taskId, FlowAction.SUBMIT_REVIEW, operator, '提交数据校验')
+
+    saveData()
+    return { success: true, message: '已提交校验' }
+  }
+
+  // 校验通过
+  function approveVerification(taskId, operator = '校验人', comment = '') {
+    const task = tasks.value.find(t => t.id === taskId)
+    if (!task) return { success: false, message: '任务不存在' }
+
+    if (task.status !== TaskStatus.VERIFYING) {
+      return { success: false, message: '只有校验中的任务才能审批' }
+    }
+
+    task.status = TaskStatus.COMPLETED
+    addFlow(taskId, FlowAction.VERIFY_APPROVE, operator, comment || '校验通过')
+
+    // 更新所有子任务状态为已完成
+    subTasks.value.filter(st => st.taskId === taskId).forEach(st => {
+      st.status = SubTaskStatus.COMPLETED
+    })
+
+    // 标记所有 execution 校验通过
+    executions.value.filter(e => e.taskId === taskId).forEach(e => {
+      e.verifyStatus = 'approved'
+      e.verifyComment = comment
+    })
+
+    saveData()
+    return { success: true, message: '校验通过' }
+  }
+
+  // 校验退回
+  function rejectVerification(taskId, operator = '校验人', comment = '') {
+    const task = tasks.value.find(t => t.id === taskId)
+    if (!task) return { success: false, message: '任务不存在' }
+
+    if (task.status !== TaskStatus.VERIFYING) {
+      return { success: false, message: '只有校验中的任务才能退回' }
+    }
+
+    if (!comment) {
+      return { success: false, message: '退回时必须填写意见' }
+    }
+
+    task.status = TaskStatus.RUNNING
+    addFlow(taskId, FlowAction.VERIFY_REJECT, operator, comment)
+
+    // 重置所有 execution 状态为未填写
+    executions.value.filter(e => e.taskId === taskId).forEach(e => {
+      e.status = ExecutionStatus.PENDING
+      e.dataValue = ''
+      e.verifyStatus = 'rejected'
+      e.verifyComment = comment
+    })
+
+    // 子任务状态回退为进行中
+    subTasks.value.filter(st => st.taskId === taskId).forEach(st => {
+      st.status = SubTaskStatus.RUNNING
+    })
+
+    saveData()
+    return { success: true, message: '已退回修改' }
   }
 
   // 添加流转记录
@@ -497,6 +608,11 @@ export const useTaskStore = defineStore('task', () => {
         return task.status === TaskStatus.APPROVED
       case FlowAction.COMPLETE:
         return task.status === TaskStatus.RUNNING
+      case FlowAction.SUBMIT_REVIEW:
+        return task.status === TaskStatus.RUNNING
+      case FlowAction.VERIFY_APPROVE:
+      case FlowAction.VERIFY_REJECT:
+        return task.status === TaskStatus.VERIFYING
       default:
         return false
     }
@@ -629,6 +745,9 @@ export const useTaskStore = defineStore('task', () => {
     rejectTask,
     startTask,
     completeTask,
+    submitForReview,
+    approveVerification,
+    rejectVerification,
     getTaskById,
     getNextStatus,
     canExecuteAction,
