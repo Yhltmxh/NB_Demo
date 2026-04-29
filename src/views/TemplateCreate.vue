@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTemplateStore } from '../stores/template'
-import { AvailableIndicators } from '../types'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -30,40 +29,37 @@ const formRules = {
   ]
 }
 
-const availableIndicatorsByCategory = computed(() => {
-  const categories = {}
-  AvailableIndicators.forEach(ind => {
-    if (!categories[ind.category]) {
-      categories[ind.category] = []
-    }
-    categories[ind.category].push(ind)
-  })
-  return categories
+// 新增指标临时数据
+const newIndicator = ref({
+  name: '',
+  unit: ''
 })
 
-function isIndicatorSelected(indicatorId) {
-  return formData.value.indicators.some(i => i.id === indicatorId)
+// 为每个指标生成唯一ID
+let indicatorSeq = Date.now()
+function genIndicatorId() {
+  return 'ind_' + (indicatorSeq++)
 }
 
-function toggleIndicator(indicator) {
-  const index = formData.value.indicators.findIndex(i => i.id === indicator.id)
-  if (index > -1) {
-    formData.value.indicators.splice(index, 1)
-  } else {
-    formData.value.indicators.push({ ...indicator })
+// 添加指标
+function addIndicator() {
+  const name = newIndicator.value.name.trim()
+  if (!name) {
+    ElMessage.warning('请输入指标名称')
+    return
   }
-}
-
-function selectAllInCategory(category) {
-  AvailableIndicators.filter(i => i.category === category).forEach(ind => {
-    if (!isIndicatorSelected(ind.id)) {
-      formData.value.indicators.push({ ...ind })
-    }
+  formData.value.indicators.push({
+    id: genIndicatorId(),
+    name: name,
+    unit: newIndicator.value.unit.trim(),
+    category: ''
   })
+  newIndicator.value = { name: '', unit: '' }
 }
 
-function deselectAllInCategory(category) {
-  formData.value.indicators = formData.value.indicators.filter(i => i.category !== category)
+// 删除指标
+function removeIndicator(index) {
+  formData.value.indicators.splice(index, 1)
 }
 
 onMounted(() => {
@@ -76,8 +72,9 @@ onMounted(() => {
         code: template.code,
         description: template.description,
         enabled: template.enabled,
-        indicators: [...template.indicators]
+        indicators: template.indicators.map(i => ({ ...i }))
       }
+      indicatorSeq = Date.now()
     }
   }
 })
@@ -87,7 +84,7 @@ async function handleSubmit() {
     await formRef.value.validate()
 
     if (formData.value.indicators.length === 0) {
-      ElMessage.warning('请至少选择一个指标')
+      ElMessage.warning('请至少添加一个指标')
       return
     }
 
@@ -142,42 +139,56 @@ function handleCancel() {
 
         <el-form-item label="指标配置">
           <div class="indicators-config">
-            <div v-for="(indicators, category) in availableIndicatorsByCategory" :key="category" class="category-group">
-              <div class="category-header">
-                <span class="category-name">{{ category }}</span>
-                <el-button size="small" text @click="selectAllInCategory(category)">全选</el-button>
-                <el-button size="small" text @click="deselectAllInCategory(category)">取消</el-button>
-              </div>
-              <div class="category-indicators">
-                <el-checkbox
-                  v-for="ind in indicators"
-                  :key="ind.id"
-                  :model-value="isIndicatorSelected(ind.id)"
-                  @change="() => toggleIndicator(ind)"
-                  :label="ind.name"
-                >
-                  {{ ind.name }}
-                  <span v-if="ind.unit" class="indicator-unit">({{ ind.unit }})</span>
-                </el-checkbox>
-              </div>
+            <!-- 指标表格 -->
+            <el-table :data="formData.indicators" border stripe style="margin-bottom: 15px" v-if="formData.indicators.length > 0">
+              <el-table-column prop="name" label="指标名称" min-width="200" />
+              <el-table-column prop="unit" label="单位" width="120" align="center">
+                <template #default="{ row }">
+                  {{ row.unit || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="80" align="center">
+                <template #default="{ $index }">
+                  <el-button type="danger" size="small" text @click="removeIndicator($index)">
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <!-- 添加指标 -->
+            <div class="add-indicator-form">
+              <el-row :gutter="10" align="middle">
+                <el-col :span="10">
+                  <el-input v-model="newIndicator.name" placeholder="指标名称" @keyup.enter="addIndicator" />
+                </el-col>
+                <el-col :span="8">
+                  <el-input v-model="newIndicator.unit" placeholder="单位（可选）" @keyup.enter="addIndicator" />
+                </el-col>
+                <el-col :span="6">
+                  <el-button type="primary" @click="addIndicator">
+                    <el-icon><Plus /></el-icon>
+                    添加指标
+                  </el-button>
+                </el-col>
+              </el-row>
             </div>
           </div>
         </el-form-item>
 
-        <el-form-item label="已选指标">
+        <el-form-item label="已选指标" v-if="formData.indicators.length > 0">
           <div class="selected-indicators">
             <el-tag
-              v-for="ind in formData.indicators"
+              v-for="(ind, index) in formData.indicators"
               :key="ind.id"
               closable
               size="small"
               style="margin-right: 8px; margin-bottom: 4px"
-              @close="toggleIndicator(ind)"
+              @close="removeIndicator(index)"
             >
               {{ ind.name }}
               <span v-if="ind.unit" style="color: #909399">({{ ind.unit }})</span>
             </el-tag>
-            <span v-if="formData.indicators.length === 0" class="no-data">未选择任何指标</span>
           </div>
         </el-form-item>
 
@@ -205,56 +216,18 @@ function handleCancel() {
 }
 
 .indicators-config {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 15px;
-  max-height: 400px;
-  overflow-y: auto;
+  width: 100%;
 }
 
-.category-group {
-  margin-bottom: 20px;
-}
-
-.category-group:last-child {
-  margin-bottom: 0;
-}
-
-.category-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.category-name {
-  font-weight: 600;
-  color: #303133;
-  margin-right: 10px;
-  text-transform: uppercase;
-}
-
-.category-indicators {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.indicator-unit {
-  color: #909399;
-  font-size: 12px;
+.add-indicator-form {
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
 }
 
 .selected-indicators {
-  min-height: 60px;
   padding: 10px;
   border: 1px dashed #dcdfe6;
   border-radius: 4px;
-}
-
-.no-data {
-  color: #909399;
-  font-size: 14px;
 }
 </style>

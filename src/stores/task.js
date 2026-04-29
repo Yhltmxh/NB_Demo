@@ -142,31 +142,31 @@ export const useTaskStore = defineStore('task', () => {
   function loadMockData() {
     // 任务1：进行中，已完成部分执行
     const task1Stations = [
-      { code: 'S01', name: '监测断面S01', subTaskTypes: ['water', 'biology'] },
-      { code: 'S02', name: '监测断面S02', subTaskTypes: ['water'] },
-      { code: 'S03', name: '监测断面S03', subTaskTypes: ['water', 'sediment'] },
-      { code: 'S04', name: '监测断面S04', subTaskTypes: ['water', 'sediment', 'biology'] },
-      { code: 'S05', name: '监测断面S05', subTaskTypes: ['sediment', 'biology'] }
+      { code: 'S01', name: '监测断面S01', subTaskTypes: ['water', 'biology', 'fishery'] },
+      { code: 'S02', name: '监测断面S02', subTaskTypes: ['water', 'environment'] },
+      { code: 'S03', name: '监测断面S03', subTaskTypes: ['water', 'sediment', 'intertidal'] },
+      { code: 'S04', name: '监测断面S04', subTaskTypes: ['water', 'sediment', 'biology', 'fishery', 'environment'] },
+      { code: 'S05', name: '监测断面S05', subTaskTypes: ['sediment', 'biology', 'fishery'] }
     ]
 
     // 任务2：待审核
     const task2Stations = [
-      { code: 'D01', name: '监测断面D01', subTaskTypes: ['water'] },
-      { code: 'D02', name: '监测断面D02', subTaskTypes: ['water', 'biology'] },
-      { code: 'D03', name: '监测断面D03', subTaskTypes: ['sediment'] }
+      { code: 'D01', name: '监测断面D01', subTaskTypes: ['water', 'fishery'] },
+      { code: 'D02', name: '监测断面D02', subTaskTypes: ['water', 'biology', 'intertidal'] },
+      { code: 'D03', name: '监测断面D03', subTaskTypes: ['sediment', 'environment'] }
     ]
 
     // 任务3：草稿
     const task3Stations = [
-      { code: 'Y01', name: '监测断面Y01', subTaskTypes: ['water', 'biology'] },
-      { code: 'Y02', name: '监测断面Y02', subTaskTypes: ['water'] }
+      { code: 'Y01', name: '监测断面Y01', subTaskTypes: ['water', 'biology', 'environment'] },
+      { code: 'Y02', name: '监测断面Y02', subTaskTypes: ['water', 'fishery', 'intertidal'] }
     ]
 
     // 任务4：已完成
     const task4Stations = [
-      { code: 'A01', name: '监测断面A01', subTaskTypes: ['water', 'sediment'] },
-      { code: 'A02', name: '监测断面A02', subTaskTypes: ['water', 'sediment'] },
-      { code: 'A03', name: '监测断面A03', subTaskTypes: ['water', 'sediment', 'biology'] }
+      { code: 'A01', name: '监测断面A01', subTaskTypes: ['water', 'sediment', 'fishery'] },
+      { code: 'A02', name: '监测断面A02', subTaskTypes: ['water', 'sediment', 'environment'] },
+      { code: 'A03', name: '监测断面A03', subTaskTypes: ['water', 'sediment', 'biology', 'fishery', 'intertidal'] }
     ]
 
     const mockTasks = [
@@ -548,7 +548,10 @@ export const useTaskStore = defineStore('task', () => {
 
   // 获取子任务进度（已完成站点数 / 应执行站点数）
   function getSubTaskProgress(taskId, subTaskType) {
-    const taskExecutions = getExecutionsByTaskIdAndType(taskId, subTaskType)
+    // 同时匹配 templateId 和 subTaskType(code) 兼容新旧数据
+    const taskExecutions = executions.value.filter(
+      e => e.taskId === taskId && (e.templateId === subTaskType || e.subTaskType === subTaskType)
+    )
     if (taskExecutions.length === 0) return 0
 
     const completedCount = taskExecutions.filter(e => e.status === ExecutionStatus.COMPLETED).length

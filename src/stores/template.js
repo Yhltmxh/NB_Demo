@@ -66,6 +66,49 @@ const DEFAULT_TEMPLATES = [
       { id: 'bio_05', name: '底栖生物-密度', category: 'biology', unit: 'ind/m2' },
       { id: 'bio_06', name: '底栖生物-生物量', category: 'biology', unit: 'g/m2' }
     ]
+  },
+  {
+    id: 'tpl_fishery',
+    name: '渔业资源',
+    code: 'fishery',
+    description: '渔业资源调查指标，包含渔获物种类、资源密度等',
+    enabled: true,
+    indicators: [
+      { id: 'fis_01', name: '渔获物种类', category: 'fishery', unit: '种' },
+      { id: 'fis_02', name: '渔获物重量', category: 'fishery', unit: 'kg' },
+      { id: 'fis_03', name: '资源密度', category: 'fishery', unit: 'kg/km2' },
+      { id: 'fis_04', name: '优势种', category: 'fishery', unit: '' },
+      { id: 'fis_05', name: '幼鱼比例', category: 'fishery', unit: '%' }
+    ]
+  },
+  {
+    id: 'tpl_environment',
+    name: '环境监视',
+    code: 'environment',
+    description: '海洋环境监视指标，包含水文气象、地形地貌等',
+    enabled: true,
+    indicators: [
+      { id: 'env_01', name: '风速', category: 'environment', unit: 'm/s' },
+      { id: 'env_02', name: '风向', category: 'environment', unit: '°' },
+      { id: 'env_03', name: '气温', category: 'environment', unit: '°C' },
+      { id: 'env_04', name: '气压', category: 'environment', unit: 'hPa' },
+      { id: 'env_05', name: '海况', category: 'environment', unit: '级' },
+      { id: 'env_06', name: '透明度', category: 'environment', unit: 'm' },
+      { id: 'env_07', name: '水深', category: 'environment', unit: 'm' }
+    ]
+  },
+  {
+    id: 'tpl_intertidal',
+    name: '潮间带',
+    code: 'intertidal',
+    description: '潮间带生物调查指标',
+    enabled: true,
+    indicators: [
+      { id: 'int_01', name: '潮间带生物种类', category: 'intertidal', unit: '种' },
+      { id: 'int_02', name: '潮间带生物密度', category: 'intertidal', unit: 'ind/m2' },
+      { id: 'int_03', name: '潮间带生物生物量', category: 'intertidal', unit: 'g/m2' },
+      { id: 'int_04', name: '栖息密度', category: 'intertidal', unit: 'ind/m2' }
+    ]
   }
 ]
 
