@@ -1,22 +1,41 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
-import { SubTaskTypeName, ExecutionStatusName } from '../types'
+import { useTemplateStore } from '../stores/template'
+import { ExecutionStatusName } from '../types'
 
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
+const templateStore = useTemplateStore()
 
 const taskId = computed(() => route.params.taskId)
 const subTaskType = computed(() => route.params.subTaskType)
 
 const task = computed(() => taskStore.getTaskById(taskId.value))
-const executions = computed(() => taskStore.getExecutionsByTaskIdAndType(taskId.value, subTaskType.value))
+
+// 优先用 templateId 查找，否则用 code 兼容旧数据
+const executions = computed(() => {
+  return taskStore.getExecutionsByTemplateId(taskId.value, subTaskType.value)
+})
 const subTaskProgress = computed(() => taskStore.getSubTaskProgress(taskId.value, subTaskType.value))
+
+// 获取子任务名称
+const subTaskName = computed(() => {
+  const template = templateStore.getTemplateById(subTaskType.value)
+  if (template) return template.name
+  const byCode = templateStore.getTemplateByCode(subTaskType.value)
+  if (byCode) return byCode.name
+  return subTaskType.value
+})
 
 // 获取子任务指标
 const indicators = computed(() => taskStore.getSubTaskIndicators(subTaskType.value))
+
+onMounted(() => {
+  templateStore.initialize()
+})
 
 // 返回任务详情
 function goBack() {
@@ -40,7 +59,7 @@ function getStatusType(status) {
     <el-card class="header-card">
       <template #header>
         <div class="card-header">
-          <span>{{ task.name }} - {{ SubTaskTypeName[subTaskType] }}</span>
+          <span>{{ task.name }} - {{ subTaskName }}</span>
           <el-button size="small" @click="goBack">
             <el-icon><ArrowLeft /></el-icon>
             返回任务详情
@@ -53,7 +72,7 @@ function getStatusType(status) {
           {{ task.taskCode }}
         </el-descriptions-item>
         <el-descriptions-item label="子任务类型">
-          {{ SubTaskTypeName[subTaskType] }}
+          {{ subTaskName }}
         </el-descriptions-item>
         <el-descriptions-item label="子任务进度">
           <el-progress

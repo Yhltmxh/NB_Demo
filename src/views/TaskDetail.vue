@@ -1,13 +1,13 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
+import { useTemplateStore } from '../stores/template'
 import {
   TaskStatusName,
   TaskStatusColor,
   FrequencyName,
   FlowActionName,
-  SubTaskTypeName,
   TaskStatus
 } from '../types'
 import { ElMessage } from 'element-plus'
@@ -15,6 +15,7 @@ import { ElMessage } from 'element-plus'
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
+const templateStore = useTemplateStore()
 
 const taskId = computed(() => route.params.id)
 const task = computed(() => taskStore.getTaskById(taskId.value))
@@ -37,8 +38,8 @@ function getSubTaskProgress(subTaskType) {
 }
 
 // 跳转到子任务详情
-function goToSubTaskDetail(subTaskType) {
-  router.push(`/tasks/${taskId.value}/subtask/${subTaskType}`)
+function goToSubTaskDetail(row) {
+  router.push(`/tasks/${taskId.value}/subtask/${row.templateId || row.type}`)
 }
 
 // 返回列表
@@ -50,6 +51,10 @@ function goBack() {
 function editTask() {
   router.push(`/tasks/${taskId.value}/edit`)
 }
+
+onMounted(() => {
+  templateStore.initialize()
+})
 </script>
 
 <template>
@@ -137,9 +142,9 @@ function editTask() {
       </template>
 
       <el-table :data="subTasks" border stripe>
-        <el-table-column prop="type" label="子任务类型" width="150">
+        <el-table-column prop="templateName" label="子任务类型" width="150">
           <template #default="{ row }">
-            <span class="subtask-type">{{ SubTaskTypeName[row.type] }}</span>
+            <span class="subtask-type">{{ row.templateName || row.type }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -169,7 +174,7 @@ function editTask() {
               size="small"
               text
               class="detail-btn"
-              @click="goToSubTaskDetail(row.type)"
+              @click="goToSubTaskDetail(row)"
             >
               查看详情
             </el-button>

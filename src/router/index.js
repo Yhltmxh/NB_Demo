@@ -43,6 +43,24 @@ const routes = [
     name: 'DataFill',
     component: () => import('../views/DataFill.vue'),
     meta: { title: '数据填写' }
+  },
+  {
+    path: '/templates',
+    name: 'TemplateList',
+    component: () => import('../views/TemplateList.vue'),
+    meta: { title: '子任务模板管理' }
+  },
+  {
+    path: '/templates/create',
+    name: 'TemplateCreate',
+    component: () => import('../views/TemplateCreate.vue'),
+    meta: { title: '创建模板' }
+  },
+  {
+    path: '/templates/:id/edit',
+    name: 'TemplateEdit',
+    component: () => import('../views/TemplateCreate.vue'),
+    meta: { title: '编辑模板' }
   }
 ]
 

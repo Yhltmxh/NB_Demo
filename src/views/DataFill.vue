@@ -18,11 +18,13 @@ const task = computed(() => taskStore.getTaskById(taskId.value))
 // 获取该站点该子任务的执行记录
 const execution = computed(() => {
   return taskStore.executions.find(
-    e => e.taskId === taskId.value && e.subTaskType === subTaskType.value && e.stationCode === stationCode.value
+    e => e.taskId === taskId.value &&
+        (e.templateId === subTaskType.value || e.subTaskType === subTaskType.value) &&
+        e.stationCode === stationCode.value
   )
 })
 
-// 获取子任务指标
+// 获取子任务指标（从模板动态加载）
 const indicators = computed(() => taskStore.getSubTaskIndicators(subTaskType.value))
 
 // 表单数据（每个指标一个输入框）

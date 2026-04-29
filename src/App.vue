@@ -10,7 +10,8 @@ const taskStore = useTaskStore()
 const isCollapse = ref(false)
 
 const menuItems = [
-  { path: '/tasks', title: '任务管理', icon: 'Folder' }
+  { path: '/tasks', title: '任务管理', icon: 'Folder' },
+  { path: '/templates', title: '模板管理', icon: 'Grid' }
 ]
 
 onMounted(() => {

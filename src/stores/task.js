@@ -15,6 +15,7 @@ import {
   FIXED_SUB_TASK_TYPES,
   ExecutionStatus
 } from '../types'
+import { useTemplateStore } from './template'
 
 const STORAGE_KEY = 'task_data'
 const TASK_FLOW_KEY = 'task_flow'
@@ -52,6 +53,10 @@ export const useTaskStore = defineStore('task', () => {
 
   // 初始化
   function initialize() {
+    // 初始化模板store（必须先加载模板）
+    const templateStore = useTemplateStore()
+    templateStore.initialize()
+
     const savedTasks = storage.get(STORAGE_KEY)
     const savedFlows = storage.get(TASK_FLOW_KEY)
     const savedSubTasks = storage.get(SUB_TASKS_KEY)
@@ -75,15 +80,26 @@ export const useTaskStore = defineStore('task', () => {
     const taskSubTasks = subTasks.value.filter(st => st.taskId === task.id)
     if (taskSubTasks.length > 0) return // 已创建过
 
-    // 创建固定的3个子任务
-    FIXED_SUB_TASK_TYPES.forEach(type => {
-      const subTaskIndicators = SubTaskIndicatorConfig[type] || []
-      const indicatorIds = subTaskIndicators.map(i => i.id)
+    const templateStore = useTemplateStore()
+
+    // 收集所有站点使用的模板类型
+    const stations = task.monitoringConfig?.stations || []
+    const usedTemplateCodes = new Set()
+    stations.forEach(station => {
+      (station.subTaskTypes || []).forEach(type => usedTemplateCodes.add(type))
+    })
+
+    // 为每个使用的模板类型创建子任务
+    usedTemplateCodes.forEach(code => {
+      const template = templateStore.getTemplateByCode(code)
+      const indicatorIds = template ? template.indicators.map(i => i.id) : []
 
       const newSubTask = {
         id: generateId(),
         taskId: task.id,
-        type: type,
+        type: code,
+        templateId: template ? template.id : '',
+        templateName: template ? template.name : code,
         indicators: indicatorIds,
         status: SubTaskStatus.PENDING
       }
@@ -97,6 +113,7 @@ export const useTaskStore = defineStore('task', () => {
     if (taskExecutions.length > 0) return // 已生成过
 
     const stations = task.monitoringConfig?.stations || []
+    const templateStore = useTemplateStore()
 
     // 遍历每个站点
     stations.forEach(station => {
@@ -104,13 +121,16 @@ export const useTaskStore = defineStore('task', () => {
       const selectedTypes = station.subTaskTypes || []
 
       // 为每个选中的子任务创建执行记录
-      selectedTypes.forEach(subTaskType => {
+      selectedTypes.forEach(code => {
+        const template = templateStore.getTemplateByCode(code)
+
         executions.value.push({
           id: generateId(),
           taskId: task.id,
           stationCode: station.code,
           stationName: station.name,
-          subTaskType: subTaskType,
+          subTaskType: code,
+          templateId: template ? template.id : '',
           status: ExecutionStatus.PENDING,
           dataValue: ''
         })
@@ -516,6 +536,11 @@ export const useTaskStore = defineStore('task', () => {
     return executions.value.filter(e => e.taskId === taskId && e.subTaskType === subTaskType)
   }
 
+  // 获取任务某个模板的执行记录（兼容subTaskType和templateId两种查找方式）
+  function getExecutionsByTemplateId(taskId, templateId) {
+    return executions.value.filter(e => e.taskId === taskId && (e.templateId === templateId || e.subTaskType === templateId))
+  }
+
   // 获取任务的所有执行记录
   function getExecutionsByTaskId(taskId) {
     return executions.value.filter(e => e.taskId === taskId)
@@ -530,12 +555,20 @@ export const useTaskStore = defineStore('task', () => {
     return Math.round((completedCount / taskExecutions.length) * 100)
   }
 
-  // 获取任务总进度（3个子任务进度的平均值）
+  // 获取任务总进度（各子任务进度的平均值）
   function getTaskProgress(taskId) {
     const taskSubTasks = getSubTasksByTaskId(taskId)
     if (taskSubTasks.length === 0) return 0
 
-    const totalProgress = taskSubTasks.reduce((sum, st) => sum + getSubTaskProgress(taskId, st.type), 0)
+    const totalProgress = taskSubTasks.reduce((sum, st) => {
+      // 优先用 templateId 查找，否则用 type 兼容旧数据
+      const execs = st.templateId
+        ? getExecutionsByTemplateId(taskId, st.templateId)
+        : getExecutionsByTaskIdAndType(taskId, st.type)
+      if (execs.length === 0) return sum
+      const completedCount = execs.filter(e => e.status === ExecutionStatus.COMPLETED).length
+      return sum + Math.round((completedCount / execs.length) * 100)
+    }, 0)
     return Math.round(totalProgress / taskSubTasks.length)
   }
 
@@ -551,8 +584,20 @@ export const useTaskStore = defineStore('task', () => {
     return { success: true, message: '已标记完成' }
   }
 
-  // 获取子任务的指标配置
+  // 获取子任务的指标配置（支持模板ID查找）
   function getSubTaskIndicators(subTaskType) {
+    // 先尝试用 subTaskType 当作 templateId 查找
+    const templateStore = useTemplateStore()
+    const template = templateStore.getTemplateById(subTaskType)
+    if (template) {
+      return template.indicators
+    }
+    // 兼容旧数据：尝试当作 code 查找
+    const templateByCode = templateStore.getTemplateByCode(subTaskType)
+    if (templateByCode) {
+      return templateByCode.indicators
+    }
+    // 兜底：从旧静态配置查找
     return SubTaskIndicatorConfig[subTaskType] || []
   }
 
@@ -590,6 +635,7 @@ export const useTaskStore = defineStore('task', () => {
     getSubTasksByTaskId,
     getExecutionsByTaskIdAndType,
     getExecutionsByTaskId,
+    getExecutionsByTemplateId,
     getSubTaskProgress,
     getTaskProgress,
     completeExecution,
