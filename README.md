@@ -11,13 +11,31 @@
 - **Vue Router** - 路由管理
 - **localStorage** - 前端数据持久化
 
+## 环境要求
+
+| 环境 | 版本要求 |
+| ---- | ---- |
+| Node.js | >= 18.0.0 |
+| pnpm | >= 8.0.0 |
+| 浏览器 | Chrome / Edge / Firefox 最新版 |
+
 ## 快速开始
 
 ```bash
-pnpm install        # 安装依赖
-pnpm run dev        # 启动开发服务器 http://localhost:5173
-pnpm run build      # 生产构建至 /dist
-pnpm run preview    # 预览生产构建
+# 安装 pnpm（如未安装）
+npm install -g pnpm
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器 http://localhost:5173
+pnpm run dev
+
+# 生产构建至 /dist
+pnpm run build
+
+# 预览生产构建
+pnpm run preview
 ```
 
 ## 核心功能
