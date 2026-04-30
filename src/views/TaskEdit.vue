@@ -2,17 +2,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
-import { Frequency, FrequencyName, SubTaskType, SubTaskTypeName, FIXED_SUB_TASK_TYPES } from '../types'
+import { useTemplateStore } from '../stores/template'
+import { Frequency, FrequencyName } from '../types'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
+const templateStore = useTemplateStore()
 
 const taskId = computed(() => route.params.id)
 const task = computed(() => taskStore.getTaskById(taskId.value))
 
-// 表单数据
 const formData = ref({
   taskCode: '',
   name: '',
@@ -26,7 +27,6 @@ const formData = ref({
   }
 })
 
-// 表单验证
 const formRef = ref(null)
 const formRules = {
   taskCode: [
@@ -46,33 +46,54 @@ const formRules = {
   ]
 }
 
-// 频次选项
 const frequencyOptions = Object.entries(FrequencyName).map(([value, label]) => ({
   value,
   label
 }))
 
-// 子任务类型选项（固定3个）
-const subTaskTypeOptions = FIXED_SUB_TASK_TYPES.map(type => ({
-  value: type,
-  label: SubTaskTypeName[type]
-}))
+const subTaskTypeOptions = computed(() =>
+  templateStore.enabledTemplates.map(t => ({
+    value: t.code,
+    label: t.name
+  }))
+)
 
-// 新增站位
 const newStation = ref({
   code: '',
   name: '',
   subTaskTypes: []
 })
 
-// 加载任务数据
+// 模板选择弹窗
+const templateDialogVisible = ref(false)
+const tempTemplateSelection = ref([])
+
+function openTemplateDialog() {
+  tempTemplateSelection.value = [...newStation.value.subTaskTypes]
+  templateDialogVisible.value = true
+}
+
+function confirmTemplateSelection() {
+  newStation.value.subTaskTypes = [...tempTemplateSelection.value]
+  templateDialogVisible.value = false
+}
+
+function cancelTemplateSelection() {
+  templateDialogVisible.value = false
+}
+
+function getTemplateName(code) {
+  const tpl = templateStore.getTemplateByCode(code)
+  return tpl ? tpl.name : code
+}
+
 onMounted(() => {
+  templateStore.initialize()
   if (task.value) {
     formData.value = JSON.parse(JSON.stringify(task.value))
   }
 })
 
-// 添加站位
 function addStation() {
   if (!newStation.value.code || !newStation.value.name) {
     ElMessage.warning('请填写站位编号和名称')
@@ -92,28 +113,10 @@ function addStation() {
   newStation.value = { code: '', name: '', subTaskTypes: [] }
 }
 
-// 删除站位
 function removeStation(index) {
   formData.value.monitoringConfig.stations.splice(index, 1)
 }
 
-// 站点选择子任务类型
-function toggleStationSubTaskType(stationIndex, subTaskType) {
-  const station = formData.value.monitoringConfig.stations[stationIndex]
-  const index = station.subTaskTypes.indexOf(subTaskType)
-  if (index > -1) {
-    station.subTaskTypes.splice(index, 1)
-  } else {
-    station.subTaskTypes.push(subTaskType)
-  }
-}
-
-// 检查站点是否选择了某子任务类型
-function isStationHasSubTaskType(stationIndex, subTaskType) {
-  return formData.value.monitoringConfig.stations[stationIndex].subTaskTypes.includes(subTaskType)
-}
-
-// 提交表单
 async function handleSubmit() {
   try {
     await formRef.value.validate()
@@ -142,7 +145,6 @@ async function handleSubmit() {
   }
 }
 
-// 取消
 function handleCancel() {
   router.push(`/tasks/${taskId.value}`)
 }
@@ -153,6 +155,10 @@ function handleCancel() {
     <el-card class="form-card">
       <template #header>
         <div class="card-header">
+          <el-button size="small" @click="handleCancel">
+            <el-icon><ArrowLeft /></el-icon>
+            返回
+          </el-button>
           <span>编辑任务</span>
         </div>
       </template>
@@ -239,7 +245,6 @@ function handleCancel() {
         <!-- 站点配置 -->
         <div class="form-section">
           <h3 class="section-title">站点配置</h3>
-          <p class="section-hint">每个站点可选择执行哪些子任务（勾选表示该站点需要执行该子任务）</p>
 
           <!-- 站位表格 -->
           <el-table
@@ -251,52 +256,51 @@ function handleCancel() {
           >
             <el-table-column prop="code" label="站位编号" width="120" />
             <el-table-column prop="name" label="站位名称" width="150" />
-            <el-table-column
-              v-for="typeOption in subTaskTypeOptions"
-              :key="typeOption.value"
-              :label="typeOption.label"
-              width="120"
-              align="center"
-            >
-              <template #default="{ $index }">
-                <el-checkbox
-                  :model-value="isStationHasSubTaskType($index, typeOption.value)"
-                  @change="(checked) => toggleStationSubTaskType($index, typeOption.value, checked)"
-                />
+            <el-table-column label="分配的子任务" min-width="200">
+              <template #default="{ row }">
+                <div class="station-template-tags">
+                  <el-tag
+                    v-for="code in row.subTaskTypes"
+                    :key="code"
+                    size="small"
+                    type="primary"
+                    style="margin-right: 4px"
+                  >{{ getTemplateName(code) }}</el-tag>
+                  <span v-if="!row.subTaskTypes || row.subTaskTypes.length === 0" class="no-data">-</span>
+                </div>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80">
+            <el-table-column label="操作" width="80" align="center">
               <template #default="{ $index }">
-                <el-button type="danger" size="small" text @click="removeStation($index)">
-                  <el-icon><Delete /></el-icon>
+                <el-button type="danger" size="small" text class="delete-btn" @click="removeStation($index)">
+                  <el-icon :size="18"><Delete /></el-icon>
                 </el-button>
               </template>
             </el-table-column>
           </el-table>
 
-          <!-- 表头说明 -->
-          <div class="station-table-header" v-if="formData.monitoringConfig.stations.length > 0">
-            <span class="header-label">勾选表示该站点需要执行该子任务</span>
-          </div>
-
           <!-- 添加站位表单 -->
           <div class="add-station-form">
             <el-row :gutter="15" align="middle">
-              <el-col :span="4">
+              <el-col :span="5">
                 <el-input v-model="newStation.code" placeholder="站位编号" />
               </el-col>
-              <el-col :span="4">
+              <el-col :span="5">
                 <el-input v-model="newStation.name" placeholder="站位名称" />
               </el-col>
-              <el-col :span="12">
-                <el-checkbox-group v-model="newStation.subTaskTypes">
-                  <el-checkbox
-                    v-for="typeOption in subTaskTypeOptions"
-                    :key="typeOption.value"
-                    :value="typeOption.value"
-                    :label="typeOption.label"
-                  />
-                </el-checkbox-group>
+              <el-col :span="8">
+                <el-button @click="openTemplateDialog" style="width: 100%">
+                  <el-icon><List /></el-icon>
+                  {{ newStation.subTaskTypes.length > 0 ? `已选 ${newStation.subTaskTypes.length} 项` : '选择子任务类型' }}
+                </el-button>
+                <div v-if="newStation.subTaskTypes.length > 0" class="selected-tags">
+                  <el-tag
+                    v-for="code in newStation.subTaskTypes"
+                    :key="code"
+                    size="small"
+                    class="template-tag"
+                  >{{ getTemplateName(code) }}</el-tag>
+                </div>
               </el-col>
               <el-col :span="4">
                 <el-button type="primary" @click="addStation">
@@ -306,6 +310,23 @@ function handleCancel() {
               </el-col>
             </el-row>
           </div>
+
+          <!-- 模板选择弹窗 -->
+          <el-dialog v-model="templateDialogVisible" title="选择子任务类型" width="500px">
+            <el-checkbox-group v-model="tempTemplateSelection">
+              <el-checkbox
+                v-for="typeOption in subTaskTypeOptions"
+                :key="typeOption.value"
+                :value="typeOption.value"
+                :label="typeOption.label"
+                class="dialog-checkbox"
+              />
+            </el-checkbox-group>
+            <template #footer>
+              <el-button @click="cancelTemplateSelection">取消</el-button>
+              <el-button type="primary" @click="confirmTemplateSelection">确定</el-button>
+            </template>
+          </el-dialog>
         </div>
 
         <!-- 操作按钮 -->
@@ -332,8 +353,9 @@ function handleCancel() {
 }
 
 .card-header {
-  font-weight: 600;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .task-form {
@@ -354,25 +376,36 @@ function handleCancel() {
   border-bottom: 1px solid #ebeef5;
 }
 
-.section-hint {
-  font-size: 12px;
-  color: #909399;
-  margin-bottom: 15px;
+.station-template-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
-.station-table-header {
-  margin-bottom: 10px;
-}
-
-.header-label {
-  font-size: 12px;
-  color: #909399;
+.no-data {
+  color: #c0c4cc;
 }
 
 .add-station-form {
   padding: 15px;
   background: #f5f7fa;
   border-radius: 8px;
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.template-tag {
+  font-size: 12px;
+}
+
+.dialog-checkbox {
+  display: block;
+  padding: 6px 0;
 }
 
 .form-actions {

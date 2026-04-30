@@ -90,7 +90,6 @@ function getStatusType(status) {
       <template #header>
         <div class="card-header">
           <span>站点执行情况</span>
-          <span class="hint-text">点击站点进入数据填写</span>
         </div>
       </template>
 
@@ -100,18 +99,12 @@ function getStatusType(status) {
             <span class="station-code">{{ row.stationCode }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="stationName" label="站位名称" width="150" />
+        <el-table-column prop="stationName" label="站位名称" min-width="150" />
         <el-table-column prop="status" label="状态" width="120" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)" size="small">
               {{ ExecutionStatusName[row.status] }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="dataValue" label="数据值" min-width="200">
-          <template #default="{ row }">
-            <span v-if="row.dataValue">{{ row.dataValue }}</span>
-            <span v-else class="no-data">-</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" align="center">
@@ -177,10 +170,6 @@ function getStatusType(status) {
 .station-code {
   font-weight: 600;
   color: #409eff;
-}
-
-.no-data {
-  color: #c0c4cc;
 }
 
 .stations-card .el-button {

@@ -46,6 +46,21 @@ const formData = ref({
 // 判断是否已完成
 const isCompleted = computed(() => execution.value?.status === 'completed')
 
+// 将数据值字符串解析为表格数据
+const parsedData = computed(() => {
+  if (!execution.value?.dataValue) return []
+  return execution.value.dataValue.split(';').map((item, index) => {
+    const trimmed = item.trim()
+    const colonIndex = trimmed.indexOf(':')
+    const name = colonIndex > -1 ? trimmed.substring(0, colonIndex).trim() : ''
+    const value = colonIndex > -1 ? trimmed.substring(colonIndex + 1).trim() : trimmed
+    // 从指标配置中获取单位
+    const ind = indicators.value[index]
+    const unit = ind ? ind.unit : ''
+    return { name, value, unit }
+  }).filter(d => d.name || d.value)
+})
+
 // 返回子任务详情
 function goBack() {
   router.push(`/tasks/${taskId.value}/subtask/${subTaskType.value}`)
@@ -109,9 +124,18 @@ function handleSubmit() {
       <template #header>
         <span>已提交数据</span>
       </template>
-      <div class="completed-data">
-        {{ execution.dataValue }}
-      </div>
+      <el-table :data="parsedData" border stripe size="small" :header-cell-style="{ fontWeight: '600', fontSize: '15px' }">
+        <el-table-column prop="name" label="指标名称" width="200">
+          <template #default="{ row }">
+            <span class="indicator-name-text">{{ row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="value" label="检测值">
+          <template #default="{ row }">
+            <span class="data-value-text">{{ row.value || '-' }} <span v-if="row.unit" class="data-unit">{{ row.unit }}</span></span>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-card>
 
     <!-- 数据填写表单 -->
@@ -173,11 +197,19 @@ function handleSubmit() {
   align-items: center;
 }
 
-.completed-data {
-  padding: 20px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #606266;
+.indicator-name-text {
+  font-size: 15px;
+  color: #303133;
+}
+
+.data-value-text {
+  font-size: 15px;
+  color: #303133;
+}
+
+.data-unit {
+  font-size: 13px;
+  color: #909399;
+  margin-left: 4px;
 }
 </style>

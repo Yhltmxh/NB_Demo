@@ -272,8 +272,8 @@ function handleCancel() {
             </el-table-column>
             <el-table-column label="操作" width="80" align="center">
               <template #default="{ $index }">
-                <el-button type="danger" size="small" text @click="removeStation($index)">
-                  <el-icon><Delete /></el-icon>
+                <el-button type="danger" size="small" text class="delete-btn" @click="removeStation($index)">
+                  <el-icon :size="18"><Delete /></el-icon>
                 </el-button>
               </template>
             </el-table-column>
