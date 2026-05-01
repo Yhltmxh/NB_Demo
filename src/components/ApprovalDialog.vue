@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { FrequencyName, SubTaskTypeName, FIXED_SUB_TASK_TYPES } from '../types'
+import { FrequencyName } from '../types'
+import { useTemplateStore } from '../stores/template'
 
 const props = defineProps({
 })
 
 const emit = defineEmits(['result'])
+
+const templateStore = useTemplateStore()
 
 // 对话框状态
 const dialogVisible = ref(false)
@@ -20,6 +23,7 @@ const isReject = computed(() => currentAction.value === 'reject')
 function open(task, action) {
   currentTask.value = task
   currentAction.value = action
+  templateStore.initialize()
   comment.value = ''
   dialogVisible.value = true
 }
@@ -30,14 +34,24 @@ const stationDisplay = computed(() => {
   return currentTask.value.monitoringConfig?.stations || []
 })
 
-// 子任务配置显示
+// 子任务配置显示 - 从实际站点中提取使用的模板
 const subTaskTypesDisplay = computed(() => {
-  return FIXED_SUB_TASK_TYPES.map(type => ({
-    type,
-    name: SubTaskTypeName[type],
-    stationCount: stationDisplay.value.filter(s => s.subTaskTypes?.includes(type)).length
-  }))
+  const usedCodes = new Set()
+  stationDisplay.value.forEach(s => (s.subTaskTypes || []).forEach(t => usedCodes.add(t)))
+  return [...usedCodes].map(code => {
+    const tpl = templateStore.getTemplateByCode(code)
+    return {
+      type: code,
+      name: tpl ? tpl.name : code,
+      stationCount: stationDisplay.value.filter(s => (s.subTaskTypes || []).includes(code)).length
+    }
+  })
 })
+
+function getTemplateName(code) {
+  const tpl = templateStore.getTemplateByCode(code)
+  return tpl ? tpl.name : code
+}
 
 // 确认
 function handleConfirm() {
@@ -114,7 +128,7 @@ defineExpose({ open })
                 size="small"
                 style="margin-right: 4px"
               >
-                {{ SubTaskTypeName[type] }}
+                {{ getTemplateName(type) }}
               </el-tag>
               <span v-if="!row.subTaskTypes?.length" class="no-data">未配置</span>
             </template>
@@ -187,18 +201,21 @@ defineExpose({ open })
 
 .subtask-stats {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .stat-count {
   font-size: 12px;
   color: #909399;
+  white-space: nowrap;
 }
 
 .comment-section {

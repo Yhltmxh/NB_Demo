@@ -15,6 +15,10 @@ dist-ssr
 # Project docs (local only)
 doc/
 
+# Release package
+release/
+启动.cmd
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
