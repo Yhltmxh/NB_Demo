@@ -38,6 +38,20 @@ pnpm run build
 pnpm run preview
 ```
 
+## 无 Node.js 环境直接查看
+
+项目已构建，`dist/` 目录包含纯静态文件（HTML + CSS + JS），可用以下任一方式打开：
+
+```bash
+# 方式1：Python（Windows 需安装 Python）
+cd dist && python -m http.server 8080
+# 浏览器打开 http://localhost:8080
+
+# 方式2：npx（需要 Node.js，但无需安装依赖）
+npx serve dist
+# 浏览器打开 http://localhost:5173
+```
+
 ## 核心功能
 
 ### 任务生命周期
