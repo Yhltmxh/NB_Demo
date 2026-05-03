@@ -15,9 +15,10 @@ dist-ssr
 # Project docs (local only)
 doc/
 
-# Release package
-release/
-启动.cmd
+# Release package (only track startup scripts)
+release/*
+!release/启动.cmd
+!release/说明.txt
 
 # Editor directories and files
 .vscode/*
