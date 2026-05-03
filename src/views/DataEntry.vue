@@ -2,12 +2,20 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
+import { useThemeStore } from '../stores/theme'
 import { RecordStatus, LayerTypeName } from '../types'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
+const themeStore = useThemeStore()
+
+const headerCellStyle = computed(() => ({
+  background: themeStore.isDark ? 'var(--el-bg-color-overlay)' : '#f5f7fa',
+  color: 'var(--el-text-color-regular)',
+  fontWeight: '600'
+}))
 
 const currentPage = ref(1)
 const pageSize = ref(50)
@@ -148,7 +156,7 @@ function goToTasks() {
         stripe
         style="width: 100%"
         max-height="600"
-        :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600' }"
+        :header-cell-style="headerCellStyle"
       >
         <el-table-column prop="stationCode" label="站位" width="100" fixed>
           <template #default="{ row }">
@@ -275,7 +283,7 @@ function goToTasks() {
 
 .task-breadcrumb .separator {
   margin: 0 8px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .toolbar-card {
@@ -299,15 +307,15 @@ function goToTasks() {
 
 .stats-info {
   font-size: 14px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .stats-info .success {
-  color: #67c23a;
+  color: var(--el-color-success);
 }
 
 .stats-info .danger {
-  color: #f56c6c;
+  color: var(--el-color-danger);
 }
 
 .completion-info {
@@ -318,7 +326,7 @@ function goToTasks() {
 
 .completion-info .label {
   font-size: 14px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .table-card {
@@ -327,19 +335,19 @@ function goToTasks() {
 
 .station-cell {
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .station-name {
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .layer-cell {
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .indicator-unit {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
   margin-left: 4px;
 }

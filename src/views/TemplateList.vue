@@ -2,10 +2,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTemplateStore } from '../stores/template'
+import { useThemeStore } from '../stores/theme'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const templateStore = useTemplateStore()
+const themeStore = useThemeStore()
+
+const headerCellStyle = computed(() => ({
+  background: themeStore.isDark ? 'var(--el-bg-color-overlay)' : '#f5f7fa',
+  color: 'var(--el-text-color-regular)',
+  fontWeight: '600'
+}))
 
 onMounted(() => {
   templateStore.initialize()
@@ -73,7 +81,7 @@ function handleResetData() {
 
     <!-- 表格 -->
     <el-card class="table-card">
-      <el-table :data="templates" border stripe style="width: 100%" :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600' }">
+      <el-table :data="templates" border stripe style="width: 100%" :header-cell-style="headerCellStyle">
         <el-table-column prop="name" label="模板名称" width="150">
           <template #default="{ row }">
             <span class="template-name">{{ row.name }}</span>
@@ -143,12 +151,12 @@ function handleResetData() {
 
 .template-name {
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .indicator-count {
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .action-buttons {

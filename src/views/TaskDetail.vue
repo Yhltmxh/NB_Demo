@@ -261,12 +261,12 @@ onMounted(() => {
 
 .flow-operator {
   font-size: 14px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .flow-comment {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .back-button {
@@ -289,13 +289,13 @@ onMounted(() => {
 .progress-text {
   font-size: 24px;
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 /* 子任务 */
 .subtask-type {
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .subtask-progress {
@@ -307,7 +307,7 @@ onMounted(() => {
 .subtask-progress-text {
   font-size: 14px;
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
   min-width: 45px;
 }
 

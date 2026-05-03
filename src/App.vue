@@ -2,12 +2,19 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTaskStore } from './stores/task'
+import { useThemeStore } from './stores/theme'
 
 const router = useRouter()
 const route = useRoute()
 const taskStore = useTaskStore()
+const themeStore = useThemeStore()
 
 const isCollapse = ref(false)
+const isFullscreen = ref(false)
+
+const currentUser = ref({
+  name: '管理员'
+})
 
 const menuItems = [
   { path: '/tasks', title: '任务管理', icon: 'Folder' },
@@ -16,10 +23,24 @@ const menuItems = [
 
 onMounted(() => {
   taskStore.initialize()
+  themeStore.initialize()
+  document.addEventListener('fullscreenchange', () => {
+    isFullscreen.value = !!document.fullscreenElement
+  })
 })
 
 function handleMenuSelect(index) {
   router.push(index)
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen()
+    isFullscreen.value = true
+  } else {
+    document.exitFullscreen()
+    isFullscreen.value = false
+  }
 }
 </script>
 
@@ -28,7 +49,6 @@ function handleMenuSelect(index) {
     <!-- 侧边栏 -->
     <el-aside width="220px" class="sidebar">
       <div class="logo">
-        <el-icon size="24"><Odometer /></el-icon>
         <span v-if="!isCollapse">环境监测系统</span>
       </div>
       <el-menu
@@ -58,7 +78,16 @@ function handleMenuSelect(index) {
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-tag type="info">环境监测任务管理与流转</el-tag>
+          <el-icon class="theme-toggle" @click="themeStore.toggleTheme()">
+            <Moon v-if="!themeStore.isDark" />
+            <Sunny v-else />
+          </el-icon>
+          <el-icon class="theme-toggle" @click="toggleFullscreen">
+            <FullScreen v-if="!isFullscreen" />
+            <Aim v-else />
+          </el-icon>
+          <el-icon :size="20"><User /></el-icon>
+          <span class="username">{{ currentUser.name }}</span>
         </div>
       </el-header>
 
@@ -75,8 +104,8 @@ function handleMenuSelect(index) {
 }
 
 .sidebar {
-  background-color: #304156;
-  color: #fff;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
   transition: width 0.3s;
 }
 
@@ -89,14 +118,14 @@ function handleMenuSelect(index) {
   gap: 5px;
   font-size: 14px;
   font-weight: bold;
-  color: #fff;
-  border-bottom: 1px solid #3d4a5c;
+  color: var(--el-text-color-primary);
+  border-bottom: 1px solid var(--sidebar-border);
   padding: 8px 0;
 }
 
 .sidebar-menu {
   border-right: none;
-  background-color: #304156;
+  background-color: var(--sidebar-bg);
 }
 
 .sidebar-menu:not(.el-menu--collapse) {
@@ -104,22 +133,22 @@ function handleMenuSelect(index) {
 }
 
 .sidebar-menu .el-menu-item {
-  color: #bfcbd9;
+  color: var(--sidebar-text);
 }
 
 .sidebar-menu .el-menu-item:hover,
 .sidebar-menu .el-menu-item.is-active {
-  background-color: #263445;
-  color: #409eff;
+  background-color: var(--sidebar-active-bg);
+  color: var(--el-color-primary);
 }
 
 .header {
-  background-color: #fff;
+  background-color: var(--el-bg-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  padding: 0 30px 0 20px;
+  box-shadow: 0 1px 4px var(--header-shadow);
 }
 
 .header-left {
@@ -131,21 +160,36 @@ function handleMenuSelect(index) {
 .collapse-btn {
   font-size: 20px;
   cursor: pointer;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .collapse-btn:hover {
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 18px;
+}
+
+.theme-toggle {
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--el-text-color-regular);
+}
+
+.theme-toggle:hover {
+  color: var(--el-color-primary);
+}
+
+.username {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 
 .main-content {
-  background-color: #f0f2f5;
+  background-color: var(--main-bg);
   padding: 20px;
   max-width: 100%;
 }

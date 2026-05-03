@@ -16,6 +16,26 @@ body {
   font-size: 15px;
 }
 
+/* 自定义 CSS 变量 - 浅色主题 */
+:root {
+  --sidebar-bg: #fff;
+  --sidebar-active-bg: #f0f5ff;
+  --sidebar-border: #fff;
+  --sidebar-text: var(--el-text-color-regular);
+  --main-bg: #f0f2f5;
+  --header-shadow: rgba(0, 21, 41, 0.08);
+}
+
+/* 自定义 CSS 变量 - 深色主题 */
+html.dark {
+  --sidebar-bg: var(--el-bg-color);
+  --sidebar-active-bg: var(--el-bg-color-overlay);
+  --sidebar-border: var(--el-bg-color);
+  --sidebar-text: var(--el-text-color-regular);
+  --main-bg: #0a1929;
+  --header-shadow: rgba(0, 0, 0, 0.3);
+}
+
 /* Element Plus 样式覆盖 */
 .el-tag {
   border-radius: 4px;
@@ -27,15 +47,15 @@ body {
 
 /* 状态颜色 */
 .status-success {
-  color: #67c23a;
+  color: var(--el-color-success);
 }
 
 .status-danger {
-  color: #f56c6c;
+  color: var(--el-color-danger);
 }
 
 .status-warning {
-  color: #e6a23c;
+  color: var(--el-color-warning);
 }
 
 /* 页面标题 */
@@ -46,22 +66,18 @@ body {
 .page-title {
   font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin-bottom: 8px;
 }
 
 .page-subtitle {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 /* 表格相关 */
 .data-table .el-table .cell {
   padding: 4px 8px;
-}
-
-.data-table .el-table th {
-  background-color: #f5f7fa;
 }
 
 /* 进度条 */
@@ -73,7 +89,7 @@ body {
 
 .progress-text {
   font-size: 14px;
-  color: #606266;
+  color: var(--el-text-color-regular);
   min-width: 60px;
 }
 
@@ -88,7 +104,7 @@ body {
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 /* 树形表格 */
@@ -103,11 +119,11 @@ body {
 
 .entry-table .station-cell {
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .entry-table .layer-cell {
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .entry-table .input-cell {
@@ -137,12 +153,12 @@ body {
 .stat-card .stat-value {
   font-size: 28px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .stat-card .stat-label {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-top: 8px;
 }
 

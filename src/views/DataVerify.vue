@@ -203,12 +203,12 @@ function getExecutionStatusType(status) {
 .group-title {
   font-weight: 600;
   font-size: 15px;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .data-value-cell {
   font-size: 13px;
-  color: #606266;
+  color: var(--el-text-color-regular);
   line-height: 1.6;
 }
 

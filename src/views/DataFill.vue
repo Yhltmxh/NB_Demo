@@ -199,17 +199,17 @@ function handleSubmit() {
 
 .indicator-name-text {
   font-size: 15px;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .data-value-text {
   font-size: 15px;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .data-unit {
   font-size: 13px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-left: 4px;
 }
 </style>

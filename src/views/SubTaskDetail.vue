@@ -135,7 +135,7 @@ function getStatusType(status) {
           style="margin-right: 8px; margin-bottom: 4px"
         >
           {{ ind.name }}
-          <span v-if="ind.unit" style="color: #909399">({{ ind.unit }})</span>
+          <span v-if="ind.unit" style="color: var(--el-text-color-secondary)">({{ ind.unit }})</span>
         </el-tag>
       </div>
     </el-card>
@@ -164,12 +164,12 @@ function getStatusType(status) {
 
 .hint-text {
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .station-code {
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .stations-card .el-button {

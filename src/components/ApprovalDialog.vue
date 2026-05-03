@@ -195,7 +195,7 @@ defineExpose({ open })
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #606266;
+  color: var(--el-text-color-regular);
   margin-bottom: 10px;
 }
 
@@ -214,7 +214,7 @@ defineExpose({ open })
 
 .stat-count {
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   white-space: nowrap;
 }
 
@@ -229,7 +229,7 @@ defineExpose({ open })
 }
 
 .no-data {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 14px;
 }
 </style>

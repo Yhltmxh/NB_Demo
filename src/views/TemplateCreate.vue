@@ -187,7 +187,7 @@ function handleCancel() {
               @close="removeIndicator(index)"
             >
               {{ ind.name }}
-              <span v-if="ind.unit" style="color: #909399">({{ ind.unit }})</span>
+              <span v-if="ind.unit" style="color: var(--el-text-color-secondary)">({{ ind.unit }})</span>
             </el-tag>
           </div>
         </el-form-item>
@@ -221,13 +221,13 @@ function handleCancel() {
 
 .add-indicator-form {
   padding: 12px;
-  background: #f5f7fa;
+  background: var(--el-fill-color-light);
   border-radius: 8px;
 }
 
 .selected-indicators {
   padding: 10px;
-  border: 1px dashed #dcdfe6;
+  border: 1px dashed var(--el-border-color);
   border-radius: 4px;
 }
 </style>

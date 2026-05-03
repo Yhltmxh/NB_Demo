@@ -369,15 +369,15 @@ function handleCancel() {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .section-hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-bottom: 15px;
 }
 
@@ -388,12 +388,12 @@ function handleCancel() {
 }
 
 .no-data {
-  color: #c0c4cc;
+  color: var(--el-text-color-placeholder);
 }
 
 .add-station-form {
   padding: 15px;
-  background: #f5f7fa;
+  background: var(--el-fill-color-light);
   border-radius: 8px;
 }
 
@@ -418,6 +418,6 @@ function handleCancel() {
   justify-content: flex-end;
   gap: 15px;
   padding-top: 20px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 </style>

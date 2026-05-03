@@ -2,12 +2,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/task'
+import { useThemeStore } from '../stores/theme'
 import { TaskStatus, TaskStatusName, TaskStatusColor, FrequencyName, FlowAction } from '../types'
 import { ElMessage } from 'element-plus'
 import ApprovalDialog from '../components/ApprovalDialog.vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
+const themeStore = useThemeStore()
+
+const headerCellStyle = computed(() => ({
+  background: themeStore.isDark ? 'var(--el-bg-color-overlay)' : '#f5f7fa',
+  color: 'var(--el-text-color-regular)',
+  fontWeight: '600'
+}))
 
 const statusFilter = ref('')
 const searchKeyword = ref('')
@@ -210,7 +218,7 @@ function getStatusTagType(status) {
         border
         stripe
         style="width: 100%"
-        :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600' }"
+        :header-cell-style="headerCellStyle"
       >
         <el-table-column prop="taskCode" label="任务编号" width="150">
           <template #default="{ row }">
@@ -321,7 +329,7 @@ function getStatusTagType(status) {
 }
 
 .desc-icon {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   cursor: pointer;
 }
 
