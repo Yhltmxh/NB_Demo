@@ -343,10 +343,7 @@ function handleCancel() {
 </template>
 
 <style scoped>
-.task-edit {
-  max-width: 900px;
-  margin: 0 auto;
-}
+
 
 .form-card {
   margin-bottom: 20px;

@@ -145,10 +145,6 @@ function getStatusType(status) {
 </template>
 
 <style scoped>
-.subtask-detail {
-  max-width: 1000px;
-  margin: 0 auto;
-}
 
 .header-card,
 .stations-card,

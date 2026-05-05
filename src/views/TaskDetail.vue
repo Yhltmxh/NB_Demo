@@ -220,10 +220,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.task-detail {
-  max-width: 1000px;
-  margin: 0 auto;
-}
+
 
 .info-card,
 .progress-card,

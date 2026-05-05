@@ -204,10 +204,7 @@ function handleCancel() {
 </template>
 
 <style scoped>
-.template-create {
-  max-width: 1000px;
-  margin: 0 auto;
-}
+
 
 .card-header {
   display: flex;

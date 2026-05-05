@@ -122,10 +122,7 @@ function handleResetData() {
 </template>
 
 <style scoped>
-.template-list {
-  max-width: 1400px;
-  margin: 0 auto;
-}
+
 
 .toolbar-card,
 .table-card {

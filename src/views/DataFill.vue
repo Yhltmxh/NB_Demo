@@ -175,10 +175,6 @@ function handleSubmit() {
 </template>
 
 <style scoped>
-.data-fill {
-  max-width: 800px;
-  margin: 0 auto;
-}
 
 .form-card :deep(.el-form) {
   width: 500px;

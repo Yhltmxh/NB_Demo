@@ -297,10 +297,6 @@ function getStatusTagType(status) {
 </template>
 
 <style scoped>
-.task-list {
-  max-width: 1400px;
-  margin: 0 auto;
-}
 
 .toolbar-card {
   margin-bottom: 20px;

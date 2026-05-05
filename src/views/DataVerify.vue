@@ -177,10 +177,6 @@ function getExecutionStatusType(status) {
 </template>
 
 <style scoped>
-.data-verify {
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
 .header-card,
 .verify-group-card,

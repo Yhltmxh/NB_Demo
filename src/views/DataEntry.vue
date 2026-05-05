@@ -256,10 +256,7 @@ function goToTasks() {
 </template>
 
 <style scoped>
-.data-entry {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+
 
 .task-info-card {
   margin-bottom: 20px;
