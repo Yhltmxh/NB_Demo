@@ -37,6 +37,14 @@ function getSubTaskProgress(subTaskType) {
   return taskStore.getSubTaskProgress(taskId.value, subTaskType)
 }
 
+// 根据执行进度推导子任务状态
+function getSubTaskStatus(subTaskType) {
+  const progress = getSubTaskProgress(subTaskType)
+  if (progress >= 100) return 'completed'
+  if (progress > 0) return 'running'
+  return 'pending'
+}
+
 // 跳转到子任务详情
 function goToSubTaskDetail(row) {
   router.push(`/tasks/${taskId.value}/subtask/${row.templateId || row.type}`)
@@ -149,8 +157,8 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'completed' ? 'success' : row.status === 'running' ? 'warning' : 'info'" size="small">
-              {{ row.status === 'completed' ? '已完成' : row.status === 'running' ? '进行中' : '待执行' }}
+            <el-tag :type="getSubTaskStatus(row.type) === 'completed' ? 'success' : getSubTaskStatus(row.type) === 'running' ? 'warning' : 'info'" size="small">
+              {{ getSubTaskStatus(row.type) === 'completed' ? '已完成' : getSubTaskStatus(row.type) === 'running' ? '进行中' : '待执行' }}
             </el-tag>
           </template>
         </el-table-column>

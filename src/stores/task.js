@@ -193,6 +193,25 @@ export const useTaskStore = defineStore('task', () => {
       { code: 'A03', name: '监测断面A03', subTaskTypes: ['water', 'sediment', 'biology', 'fishery', 'intertidal'] }
     ]
 
+    // 任务5：待校验（所有数据已录入完成）
+    const task5Stations = [
+      { code: 'B01', name: '监测站B01', subTaskTypes: ['water', 'sediment'] },
+      { code: 'B02', name: '监测站B02', subTaskTypes: ['water', 'biology'] }
+    ]
+
+    // 任务6：已审批未启动
+    const task6Stations = [
+      { code: 'C01', name: '监测站C01', subTaskTypes: ['water', 'environment', 'fishery'] },
+      { code: 'C02', name: '监测站C02', subTaskTypes: ['sediment', 'biology'] },
+      { code: 'C03', name: '监测站C03', subTaskTypes: ['water', 'sediment', 'intertidal'] }
+    ]
+
+    // 任务7：已驳回
+    const task7Stations = [
+      { code: 'E01', name: '监测站E01', subTaskTypes: ['water'] },
+      { code: 'E02', name: '监测站E02', subTaskTypes: ['sediment'] }
+    ]
+
     const mockTasks = [
       {
         id: 'task_001',
@@ -249,6 +268,48 @@ export const useTaskStore = defineStore('task', () => {
         createTime: '2025-01-01 08:00',
         rejectReason: '',
         monitoringConfig: { stations: task4Stations }
+      },
+      {
+        id: 'task_005',
+        taskCode: 'HJ-2026-005',
+        name: '春季近岸水质专项监测',
+        startTime: '2026-03-01',
+        endTime: '2026-05-31',
+        frequency: 'once',
+        status: TaskStatus.VERIFYING,
+        description: '春季近岸海域水质专项监测，所有数据已录入待校验',
+        creator: '用户1',
+        createTime: '2026-03-01 08:30',
+        rejectReason: '',
+        monitoringConfig: { stations: task5Stations }
+      },
+      {
+        id: 'task_006',
+        taskCode: 'HJ-2026-006',
+        name: '港口疏浚物监测',
+        startTime: '2026-06-01',
+        endTime: '2026-09-30',
+        frequency: 'quarterly',
+        status: TaskStatus.APPROVED,
+        description: '港口疏浚作业海洋环境影响跟踪监测',
+        creator: '用户2',
+        createTime: '2026-04-15 10:00',
+        rejectReason: '',
+        monitoringConfig: { stations: task6Stations }
+      },
+      {
+        id: 'task_007',
+        taskCode: 'HJ-2026-007',
+        name: '入海排污口监测',
+        startTime: '2026-04-01',
+        endTime: '2026-06-30',
+        frequency: 'monthly',
+        status: TaskStatus.DRAFT,
+        description: '入海排污口周边海域环境监测',
+        creator: '用户3',
+        createTime: '2026-04-01 09:00',
+        rejectReason: '监测方案中缺少排污口具体坐标信息，请补充后重新提交',
+        monitoringConfig: { stations: task7Stations }
       }
     ]
 
@@ -276,6 +337,23 @@ export const useTaskStore = defineStore('task', () => {
         { id: 'flow_011', taskId: 'task_004', action: FlowAction.START, operator: '用户1', comment: '启动监测', time: '2025-01-03 08:00' },
         { id: 'flow_012', taskId: 'task_004', action: FlowAction.SUBMIT_REVIEW, operator: '用户4', comment: '数据全部录入完成，提交校验', time: '2025-12-01 09:00' },
         { id: 'flow_013', taskId: 'task_004', action: FlowAction.VERIFY_APPROVE, operator: '用户1', comment: '校验通过，数据无误', time: '2025-12-15 10:00' }
+      ],
+      'task_005': [
+        { id: 'flow_014', taskId: 'task_005', action: FlowAction.CREATE, operator: '用户1', comment: '创建任务', time: '2026-03-01 08:30' },
+        { id: 'flow_015', taskId: 'task_005', action: FlowAction.SUBMIT, operator: '用户1', comment: '提交水质专项监测', time: '2026-03-02 09:00' },
+        { id: 'flow_016', taskId: 'task_005', action: FlowAction.APPROVE, operator: '用户2', comment: '审核通过', time: '2026-03-02 15:00' },
+        { id: 'flow_017', taskId: 'task_005', action: FlowAction.START, operator: '用户2', comment: '启动监测', time: '2026-03-03 08:00' },
+        { id: 'flow_018', taskId: 'task_005', action: FlowAction.SUBMIT_REVIEW, operator: '用户1', comment: '所有站点数据录入完成，提交校验', time: '2026-04-20 16:00' }
+      ],
+      'task_006': [
+        { id: 'flow_019', taskId: 'task_006', action: FlowAction.CREATE, operator: '用户2', comment: '创建任务', time: '2026-04-15 10:00' },
+        { id: 'flow_020', taskId: 'task_006', action: FlowAction.SUBMIT, operator: '用户2', comment: '提交疏浚物监测方案', time: '2026-04-16 09:00' },
+        { id: 'flow_021', taskId: 'task_006', action: FlowAction.APPROVE, operator: '用户1', comment: '审核通过，方案合理', time: '2026-04-17 11:00' }
+      ],
+      'task_007': [
+        { id: 'flow_022', taskId: 'task_007', action: FlowAction.CREATE, operator: '用户3', comment: '创建任务', time: '2026-04-01 09:00' },
+        { id: 'flow_023', taskId: 'task_007', action: FlowAction.SUBMIT, operator: '用户3', comment: '提交排污口监测方案', time: '2026-04-02 09:00' },
+        { id: 'flow_024', taskId: 'task_007', action: FlowAction.REJECT, operator: '用户1', comment: '监测方案中缺少排污口具体坐标信息，请补充后重新提交', time: '2026-04-03 14:00' }
       ]
     }
     taskFlows.value = mockFlows
@@ -301,6 +379,17 @@ export const useTaskStore = defineStore('task', () => {
       }
     })
 
+    // 更新 task_001 子任务状态：根据执行完成比例推导
+    subTasks.value.filter(st => st.taskId === 'task_001').forEach(st => {
+      const stExecs = task001Exec.filter(e => e.subTaskType === st.type || e.templateId === st.type)
+      const stCompleted = stExecs.filter(e => e.status === ExecutionStatus.COMPLETED).length
+      if (stCompleted === stExecs.length && stExecs.length > 0) {
+        st.status = SubTaskStatus.COMPLETED
+      } else if (stCompleted > 0) {
+        st.status = SubTaskStatus.RUNNING
+      }
+    })
+
     // 创建 task_004 的子任务和执行记录（已完成状态）
     createSubTasksForTask(mockTasks[3])
     generateExecutionsForTask(mockTasks[3])
@@ -323,6 +412,29 @@ export const useTaskStore = defineStore('task', () => {
         exec.dataValue = exec.subTaskType + ': 数据已采集并录入系统'
       }
     })
+
+    // 创建 task_005 的子任务和执行记录（待校验：所有数据已录入完成）
+    createSubTasksForTask(mockTasks[4])
+    generateExecutionsForTask(mockTasks[4])
+    const task005Exec = executions.value.filter(e => e.taskId === 'task_005')
+    task005Exec.forEach(exec => {
+      exec.status = ExecutionStatus.COMPLETED
+      const tpl = templateStore.getTemplateByCode(exec.subTaskType)
+      if (tpl && tpl.indicators) {
+        exec.dataValue = tpl.indicators.map(ind => {
+          return `${ind.name}: ${generateMockValue(ind.id, ind.unit, exec.stationCode)}`
+        }).join('; ')
+      } else {
+        exec.dataValue = exec.subTaskType + ': 数据已采集'
+      }
+    })
+    subTasks.value.filter(st => st.taskId === 'task_005').forEach(st => {
+      st.status = SubTaskStatus.COMPLETED
+    })
+
+    // 创建 task_006 的子任务和执行记录（已审批，未启动，无数据）
+    createSubTasksForTask(mockTasks[5])
+    generateExecutionsForTask(mockTasks[5])
 
     saveData()
   }
